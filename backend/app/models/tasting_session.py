@@ -1,0 +1,1 @@
+"""Tasting session model placeholder."""

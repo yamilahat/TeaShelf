@@ -1,0 +1,1 @@
+"""Tea model placeholder."""
