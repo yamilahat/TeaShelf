@@ -11,8 +11,3 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-
-
-@app.get("/health")
-def health_check():
-    return {"status": "healthy"}

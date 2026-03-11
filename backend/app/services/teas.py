@@ -1,1 +1,0 @@
-"""Tea service placeholder."""

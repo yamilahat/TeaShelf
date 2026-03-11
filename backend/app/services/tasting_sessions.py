@@ -1,1 +1,0 @@
-"""Tasting session service placeholder."""
