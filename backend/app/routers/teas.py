@@ -38,8 +38,38 @@ def list_teas(db: Session = Depends(get_db_session)) -> list[Tea]:
 
 
 @router.get("/{tea_id}", response_model=Tea)
-def get_tea(id: int, db: Session = Depends(get_db_session)) -> Tea:
-    tea = db.get(Tea, id)
-    if tea is None:
+def get_tea(tea_id: int, db: Session = Depends(get_db_session)) -> Tea:
+    tea = db.get(Tea, tea_id)
+    if not tea:
         raise HTTPException(status_code=404, detail="Tea not found")
     return tea
+
+
+@router.patch("/{tea_id}", response_model=TeaRead)
+def update_tea(
+    tea_id: int,
+    payload: TeaUpdate,
+    db: Session = Depends(get_db_session),
+) -> Tea:
+    tea = db.get(Tea, tea_id)
+    if not tea:
+        raise HTTPException(status_code=404, detail="Tea not found")
+
+    update_data = payload.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(tea, field, value)
+
+    db.commit()
+    db.refresh(tea)
+    return tea
+
+
+@router.delete("/{tea_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_tea(tea_id: int, db: Session = Depends(get_db_session)) -> Response:
+    tea = db.get(Tea, tea_id)
+    if not tea:
+        raise HTTPException(status_code=404, detail="Tea not found")
+
+    db.delete(tea)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
