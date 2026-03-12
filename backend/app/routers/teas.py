@@ -43,7 +43,7 @@ def get_tea(tea_id: int, db: Session = Depends(get_db_session)) -> Tea:
     return tea
 
 
-@router.patch("/{tea_id}", response_model=TeaRead)
+@router.put("/{tea_id}", response_model=TeaRead)
 def update_tea(
     tea_id: int,
     payload: TeaUpdate,
