@@ -1,5 +1,3 @@
-from typing import Sequence
-
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -37,7 +35,7 @@ def list_teas(db: Session = Depends(get_db_session)) -> list[Tea]:
     return teas
 
 
-@router.get("/{tea_id}", response_model=Tea)
+@router.get("/{tea_id}", response_model=TeaRead)
 def get_tea(tea_id: int, db: Session = Depends(get_db_session)) -> Tea:
     tea = db.get(Tea, tea_id)
     if not tea:

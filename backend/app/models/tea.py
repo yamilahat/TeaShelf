@@ -1,8 +1,12 @@
-# from app.models import TastingSession
+from typing import TYPE_CHECKING
+
+from sqlalchemy import Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Text, Integer
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.tasting_session import TastingSession
 
 
 class Tea(Base):
