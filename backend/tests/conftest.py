@@ -1,6 +1,56 @@
-from pathlib import Path
-import sys
+from collections.abc import Generator
 
-BACKEND_DIR = Path(__file__).resolve().parents[1]
-if str(BACKEND_DIR) not in sys.path:
-    sys.path.insert(0, str(BACKEND_DIR))
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from app.config import settings
+from app.db.base import Base
+from app.db.session import get_db_session
+from app.models import tea as tea_model  # noqa: F401
+from app.models import tasting_session as tasting_session_model  # noqa: F401
+from app.routers.health import router as health_router
+from app.routers.teas import router as teas_router
+
+
+TEST_DATABASE_URL = "sqlite://"
+engine = create_engine(
+    TEST_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+)
+TestingSessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+
+
+@pytest.fixture()
+def app() -> FastAPI:
+    test_app = FastAPI(title=settings.app_name)
+    test_app.include_router(health_router)
+    test_app.include_router(teas_router)
+    return test_app
+
+
+@pytest.fixture(autouse=True)
+def db_session(app: FastAPI) -> Generator[Session, None, None]:
+    Base.metadata.create_all(bind=engine)
+    session = TestingSessionLocal()
+
+    def override_get_db_session() -> Generator[Session, None, None]:
+        yield session
+
+    app.dependency_overrides[get_db_session] = override_get_db_session
+    try:
+        yield session
+    finally:
+        session.close()
+        app.dependency_overrides.clear()
+        Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture()
+def client(app: FastAPI) -> Generator[TestClient, None, None]:
+    with TestClient(app) as test_client:
+        yield test_client
