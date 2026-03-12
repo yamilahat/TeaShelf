@@ -31,9 +31,15 @@ def create_tea(
 
 
 @router.get("", response_model=list[TeaRead])
-def list_teas(
-    db: Session = Depends(get_db_session),
-) -> list[Tea]:
+def list_teas(db: Session = Depends(get_db_session)) -> list[Tea]:
     stmt = select(Tea).order_by(Tea.id.asc())
     teas = list(db.scalars(stmt).all())
     return teas
+
+
+@router.get("/{tea_id}", response_model=Tea)
+def get_tea(id: int, db: Session = Depends(get_db_session)) -> Tea:
+    tea = db.get(Tea, id)
+    if tea is None:
+        raise HTTPException(status_code=404, detail="Tea not found")
+    return tea
