@@ -7,13 +7,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.config import settings
 from app.db.base import Base
 from app.db.session import get_db_session
+from app.main import create_app
 from app.models import tea as tea_model  # noqa: F401
 from app.models import tasting_session as tasting_session_model  # noqa: F401
-from app.routers.health import router as health_router
-from app.routers.teas import router as teas_router
 
 
 TEST_DATABASE_URL = "sqlite://"
@@ -27,10 +25,7 @@ TestingSessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=Fals
 
 @pytest.fixture()
 def app() -> FastAPI:
-    test_app = FastAPI(title=settings.app_name)
-    test_app.include_router(health_router)
-    test_app.include_router(teas_router)
-    return test_app
+    return create_app()
 
 
 @pytest.fixture(autouse=True)
