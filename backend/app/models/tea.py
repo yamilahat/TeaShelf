@@ -1,5 +1,7 @@
-from sqlalchemy.orm import Mapped, mapped_column
+# from app.models import TastingSession
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Text, Integer
+
 from app.db.base import Base
 
 
@@ -13,3 +15,8 @@ class Tea(Base):
     tea_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
     harvest_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    tasting_sessions: Mapped[list["TastingSession"]] = relationship(
+        back_populates="tea",
+        cascade="all, delete-orphan",
+    )
