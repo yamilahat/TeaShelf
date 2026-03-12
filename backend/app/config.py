@@ -9,7 +9,8 @@ class Settings:
     app_name: str = "TeaShelf"
     api_prefix: str = "/api"
     database_url: str = os.getenv(
-        "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/teashelf"
+        "DATABASE_URL",
+        "postgresql+psycopg://postgres:postgres@localhost:5432/teashelf",
     )
 
 
