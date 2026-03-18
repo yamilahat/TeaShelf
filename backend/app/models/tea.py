@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 if TYPE_CHECKING:
-    from app.models.tasting_session import TastingSession
+    from app.models.tea_session import TeaSession
 
 
 class Tea(Base):
@@ -20,7 +20,7 @@ class Tea(Base):
     harvest_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    tasting_sessions: Mapped[list["TastingSession"]] = relationship(
+    tea_sessions: Mapped[list["TeaSession"]] = relationship(
         back_populates="tea",
         cascade="all, delete-orphan",
     )
