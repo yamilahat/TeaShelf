@@ -6,6 +6,6 @@ all registered metadata before autogenerating migrations.
 
 from app.db.base import Base
 from app.models.tea import Tea
-from app.models.tasting_session import TastingSession
+from app.models.tea_session import TeaSession
 
-__all__ = ["Base", "Tea", "TastingSession"]
+__all__ = ["Base", "Tea", "TeaSession"]
