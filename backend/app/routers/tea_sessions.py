@@ -27,46 +27,46 @@ def create_session(
     return tea_session
 
 
-# @router.get("", response_model=list[SessionRead])
-# def list_teas(db: Session = Depends(get_db_session)) -> list[TeaSession]:
-#     stmt = select(Tea).order_by(Tea.id.asc())
-#     teas = list(db.scalars(stmt).all())
-#     return teas
+@router.get("", response_model=list[SessionRead])
+def list_sessions(db: Session = Depends(get_db_session)) -> list[TeaSession]:
+    stmt = select(TeaSession).order_by(TeaSession.id.asc())
+    teas = list(db.scalars(stmt).all())
+    return teas
 
 
-# @router.get("/{tea_id}", response_model=TeaRead)
-# def get_tea(tea_id: int, db: Session = Depends(get_db_session)) -> Tea:
-#     tea = db.get(Tea, tea_id)
-#     if not tea:
-#         raise HTTPException(status_code=404, detail="Tea not found")
-#     return tea
+@router.get("/{session_id}", response_model=SessionRead)
+def get_session(session_id: int, db: Session = Depends(get_db_session)) -> TeaSession:
+    tea_session = db.get(TeaSession, session_id)
+    if not tea_session:
+        raise HTTPException(status_code=404, detail="Tea session not found")
+    return tea_session
 
 
-# @router.put("/{tea_id}", response_model=TeaRead)
-# def update_tea(
-#     tea_id: int,
-#     payload: TeaUpdate,
-#     db: Session = Depends(get_db_session),
-# ) -> Tea:
-#     tea = db.get(Tea, tea_id)
-#     if not tea:
-#         raise HTTPException(status_code=404, detail="Tea not found")
+@router.put("/{session_id}", response_model=SessionRead)
+def update_session(
+    session_id: int,
+    payload: SessionUpdate,
+    db: Session = Depends(get_db_session),
+) -> TeaSession:
+    tea_session = db.get(TeaSession, session_id)
+    if not tea_session:
+        raise HTTPException(status_code=404, detail="Tea session not found")
 
-#     update_data = payload.model_dump(exclude_unset=True)
-#     for field, value in update_data.items():
-#         setattr(tea, field, value)
+    update_data = payload.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(tea_session, field, value)
 
-#     db.commit()
-#     db.refresh(tea)
-#     return tea
+    db.commit()
+    db.refresh(tea_session)
+    return tea_session
 
 
-# @router.delete("/{tea_id}", status_code=status.HTTP_204_NO_CONTENT)
-# def delete_tea(tea_id: int, db: Session = Depends(get_db_session)) -> Response:
-#     tea = db.get(Tea, tea_id)
-#     if not tea:
-#         raise HTTPException(status_code=404, detail="Tea not found")
+@router.delete("/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_session(session_id: int, db: Session = Depends(get_db_session)) -> Response:
+    tea_session = db.get(TeaSession, session_id)
+    if not tea_session:
+        raise HTTPException(status_code=404, detail="Tea session not found")
 
-#     db.delete(tea)
-#     db.commit()
-#     return Response(status_code=status.HTTP_204_NO_CONTENT)
+    db.delete(tea_session)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
