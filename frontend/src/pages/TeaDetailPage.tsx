@@ -93,8 +93,9 @@ function TeaEditor({
   const deleteMutation = useMutation({
     mutationFn: () => deleteTea(teaId),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["teas"] });
-      navigate("/teas");
+      queryClient.removeQueries({ queryKey: ["teas", teaId], exact: true });
+      navigate("/teas", { replace: true });
+      await queryClient.invalidateQueries({ queryKey: ["teas"], exact: true });
     },
   });
 
