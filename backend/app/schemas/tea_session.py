@@ -33,6 +33,8 @@ class SessionUpdate(SessionBase):
 class SessionRead(SessionBase):
     model_config = ConfigDict(from_attributes=True)
 
+    id: int
+
     @field_serializer("session_date")
     def serialize_session_date(self, value: datetime) -> str:
         return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")

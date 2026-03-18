@@ -1,12 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+﻿from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db_session
+from app.models.tea import Tea
 from app.models.tea_session import TeaSession
 from app.schemas.tea_session import SessionCreate, SessionRead, SessionUpdate
-
-from app.models.tea import Tea
 
 router = APIRouter(prefix="/sessions", tags=["teas"])
 
@@ -16,6 +15,10 @@ def create_session(
     payload: SessionCreate,
     db: Session = Depends(get_db_session),
 ) -> TeaSession:
+    tea = db.get(Tea, payload.tea_id)
+    if not tea:
+        raise HTTPException(status_code=404, detail="Tea not found")
+
     tea_session = TeaSession(
         tea_id=payload.tea_id,
         session_date=payload.session_date,
@@ -23,12 +26,6 @@ def create_session(
         rating=payload.rating,
         notes=payload.notes,
     )
-    
-    # check that the tea_id actually exists
-    tea = db.get(Tea, tea_session.tea_id)
-    if not tea:
-        raise HTTPException(status_code=404, detail="Tea not found")
-    
     db.add(tea_session)
     db.commit()
     db.refresh(tea_session)
@@ -63,7 +60,7 @@ def update_session(
     tea = db.get(Tea, payload.tea_id)
     if not tea:
         raise HTTPException(status_code=404, detail="Tea not found")
-    
+
     update_data = payload.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(tea_session, field, value)
