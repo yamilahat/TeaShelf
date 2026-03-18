@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { Navigate, NavLink, Route, Routes } from "react-router";
 import { NewTeaPage } from "./pages/NewTeaPage";
+import { SessionDetailPage } from "./pages/SessionDetailPage";
+import { SessionsPage } from "./pages/SessionsPage";
 import { TeaDetailPage } from "./pages/TeaDetailPage";
 import { TeasPage } from "./pages/TeasPage";
 
@@ -37,24 +39,6 @@ function NavItem({ to, children }: { to: string; children: ReactNode }) {
   );
 }
 
-function SessionsPage() {
-  return (
-    <section className="panel stack">
-      <div className="section-heading">
-        <div>
-          <p className="eyebrow">Sessions</p>
-          <h2>Tasting sessions</h2>
-        </div>
-        <p className="muted">A place for brewing notes and tasting history.</p>
-      </div>
-
-      <p className="muted">
-        Session tracking is coming next. For now, you can browse and manage your tea collection.
-      </p>
-    </section>
-  );
-}
-
 export default function App() {
   return (
     <ShellLayout>
@@ -64,6 +48,7 @@ export default function App() {
         <Route path="/teas/new" element={<NewTeaPage />} />
         <Route path="/teas/:teaId" element={<TeaDetailPage />} />
         <Route path="/sessions" element={<SessionsPage />} />
+        <Route path="/sessions/:sessionId" element={<SessionDetailPage />} />
       </Routes>
     </ShellLayout>
   );

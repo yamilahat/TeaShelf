@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router";
 import { deleteTea, getTea, updateTea } from "../features/teas/api";
+import { listSessions } from "../features/sessions/api";
 import { TeaForm } from "../features/teas/TeaForm";
 import {
   type TeaFormState,
@@ -80,6 +81,16 @@ function TeaEditor({
   const [form, setForm] = useState<TeaFormState>(initialForm);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
+  const sessionsQuery = useQuery({
+    queryKey: ["sessions"],
+    queryFn: listSessions,
+  });
+
+  const relatedSessions = useMemo(
+    () => (sessionsQuery.data ?? []).filter((session) => session.tea_id === teaId),
+    [sessionsQuery.data, teaId],
+  );
+
   const updateMutation = useMutation({
     mutationFn: () => updateTea(teaId, toTeaPayload(form)),
     onSuccess: async (updatedTea) => {
@@ -127,6 +138,38 @@ function TeaEditor({
       </div>
 
       {saveMessage ? <p className="feedback feedback--success">{saveMessage}</p> : null}
+
+      <div className="panel panel--nested stack">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Sessions</p>
+            <h3>Linked sessions</h3>
+          </div>
+          <Link to="/sessions" className="button button--secondary">
+            Open sessions
+          </Link>
+        </div>
+
+        {sessionsQuery.isPending ? <p className="muted">Loading linked sessions...</p> : null}
+        {sessionsQuery.isError ? (
+          <p className="feedback feedback--error">{(sessionsQuery.error as Error).message}</p>
+        ) : null}
+        {!sessionsQuery.isPending && !sessionsQuery.isError && relatedSessions.length === 0 ? (
+          <p className="muted">No sessions are linked to this tea yet.</p>
+        ) : null}
+        {!sessionsQuery.isPending && !sessionsQuery.isError && relatedSessions.length > 0 ? (
+          <div className="linked-list">
+            {relatedSessions.map((session) => (
+              <Link key={session.id} to={`/sessions/${session.id}`} className="linked-list__item">
+                <strong>Session #{session.id}</strong>
+                <span>
+                  {new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(session.session_date))}
+                </span>
+              </Link>
+            ))}
+          </div>
+        ) : null}
+      </div>
 
       <TeaForm
         form={form}
