@@ -1,36 +1,70 @@
-import { NavLink, Navigate, Route, Routes } from "react-router";
-import { TeasPage } from "./pages/TeasPage";
+import type { ReactNode } from "react";
+import { Navigate, NavLink, Route, Routes } from "react-router";
 import { NewTeaPage } from "./pages/NewTeaPage";
+import { TeaDetailPage } from "./pages/TeaDetailPage";
+import { TeasPage } from "./pages/TeasPage";
 
-export default function App() {
+function ShellLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      <header className="border-b">
-        <div className="mx-auto flex max-w-5xl items-center gap-6 p-4">
-          <h1 className="text-xl font-semibold">TeaShelf</h1>
+    <div className="app-shell">
+      <header className="site-header">
+        <div className="site-header__inner">
+          <div>
+            <h1>TeaShelf</h1>
+            <p className="muted">A simple home for your tea collection and notes.</p>
+          </div>
 
-          <nav className="flex gap-4 text-sm">
-            <NavLink to="/teas" className="hover:underline">
-              Teas
-            </NavLink>
-            <NavLink to="/teas/new" className="hover:underline">
-              New tea
-            </NavLink>
-            <NavLink to="/sessions" className="hover:underline">
-              Sessions
-            </NavLink>
+          <nav className="nav">
+            <NavItem to="/teas">Teas</NavItem>
+            <NavItem to="/sessions">Sessions</NavItem>
           </nav>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl p-6">
-        <Routes>
-          <Route path="/" element={<Navigate to="/teas" replace />} />
-          <Route path="/teas" element={<TeasPage />} />
-          <Route path="/teas/new" element={<NewTeaPage />} />
-          <Route path="/sessions" element={<div>Sessions page next.</div>} />
-        </Routes>
-      </main>
+      <main className="page">{children}</main>
     </div>
+  );
+}
+
+function NavItem({ to, children }: { to: string; children: ReactNode }) {
+  return (
+    <NavLink
+      to={to}
+      className={({ isActive }) => `nav__item${isActive ? " nav__item--active" : ""}`}
+    >
+      {children}
+    </NavLink>
+  );
+}
+
+function SessionsPage() {
+  return (
+    <section className="panel stack">
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">Sessions</p>
+          <h2>Tasting sessions</h2>
+        </div>
+        <p className="muted">A place for brewing notes and tasting history.</p>
+      </div>
+
+      <p className="muted">
+        Session tracking is coming next. For now, you can browse and manage your tea collection.
+      </p>
+    </section>
+  );
+}
+
+export default function App() {
+  return (
+    <ShellLayout>
+      <Routes>
+        <Route path="/" element={<Navigate to="/teas" replace />} />
+        <Route path="/teas" element={<TeasPage />} />
+        <Route path="/teas/new" element={<NewTeaPage />} />
+        <Route path="/teas/:teaId" element={<TeaDetailPage />} />
+        <Route path="/sessions" element={<SessionsPage />} />
+      </Routes>
+    </ShellLayout>
   );
 }

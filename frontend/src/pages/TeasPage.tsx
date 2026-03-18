@@ -1,41 +1,94 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router";
 import { listTeas } from "../features/teas/api";
 
 export function TeasPage() {
-  const { data, isPending, isError, error } = useQuery({
+  const { data, isPending, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["teas"],
     queryFn: listTeas,
   });
 
-  if (isPending) {
-    return <p>Loading teas...</p>;
-  }
-
-  if (isError) {
-    return <p className="text-red-600">{(error as Error).message}</p>;
-  }
-
-  if (!data || data.length === 0) {
-    return <p>No teas yet.</p>;
-  }
-
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-semibold">Teas</h2>
-
-      <div className="grid gap-4">
-        {data.map((tea) => (
-          <article key={tea.id} className="rounded-xl border p-4">
-            <h3 className="text-lg font-medium">{tea.name}</h3>
-            <p className="text-sm text-slate-600">
-              {tea.vendor ?? "Unknown vendor"} · {tea.tea_type ?? "Unknown type"}
-            </p>
-            <p className="text-sm text-slate-500">
-              {tea.origin ?? "Unknown origin"}
-            </p>
-          </article>
-        ))}
+    <section className="stack">
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">Inventory</p>
+          <h2>Teas</h2>
+        </div>
+        <div className="button-row">
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            disabled={isFetching}
+            className="button button--secondary"
+          >
+            {isFetching ? "Refreshing..." : "Refresh"}
+          </button>
+          <Link to="/teas/new" className="button button--primary">
+            Add tea
+          </Link>
+        </div>
       </div>
-    </div>
+
+      {isPending ? <p className="panel muted">Loading teas...</p> : null}
+
+      {isError ? (
+        <p className="panel feedback feedback--error">{(error as Error).message}</p>
+      ) : null}
+
+      {!isPending && !isError && (!data || data.length === 0) ? (
+        <div className="panel stack">
+          <p className="muted">
+            No teas yet. Start your shelf with a tea you want to remember.
+          </p>
+          <div>
+            <Link to="/teas/new" className="button button--primary">
+              Create the first tea
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
+      {!isPending && !isError && data?.length ? (
+        <div className="tea-grid">
+          {data.map((tea) => (
+            <article key={tea.id} className="tea-card">
+              <div className="stack stack--tight">
+                <div className="tea-card__header">
+                  <div>
+                    <h3>{tea.name}</h3>
+                    <p className="muted">{tea.vendor ?? "Unknown vendor"}</p>
+                  </div>
+                  <span className="pill">#{tea.id}</span>
+                </div>
+
+                <dl className="tea-card__meta">
+                  <div>
+                    <dt>Type</dt>
+                    <dd>{tea.tea_type ?? "Not set"}</dd>
+                  </div>
+                  <div>
+                    <dt>Origin</dt>
+                    <dd>{tea.origin ?? "Not set"}</dd>
+                  </div>
+                  <div>
+                    <dt>Harvest</dt>
+                    <dd>{tea.harvest_year ?? "Not set"}</dd>
+                  </div>
+                </dl>
+
+                {tea.notes ? <p className="tea-card__notes">{tea.notes}</p> : null}
+              </div>
+
+              <div className="button-row">
+                <Link to={`/teas/${tea.id}`} className="button button--secondary">
+                  View and edit
+                </Link>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : null}
+    </section>
   );
 }
