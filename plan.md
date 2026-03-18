@@ -14,6 +14,7 @@ Do not move to the next milestone until the current one is complete and validate
 - Prefer one small clean step over one big patch.
 - Human writes core decisions and important logic.
 - AI helps with scaffolding, tests, review, and isolated repetitive pieces.
+- Frontend work may only expose already-completed backend capabilities and must not expand feature scope or force backend API changes.
 
 ---
 
@@ -101,6 +102,39 @@ Add basic tea endpoints.
 ### Validation
 - `pytest -q`
 - `ruff check .`
+
+---
+
+## Milestone 3.5: demo client shell
+
+### Goal
+Build a minimal frontend shell that demonstrates the completed tea CRUD API.
+
+### Human-owned
+- choose frontend stack
+- choose basic page/layout structure
+- decide how much styling is worth doing for a demo
+
+### AI-assisted allowed
+- scaffold frontend shell
+- wire API calls to existing tea endpoints
+- generate basic component/test boilerplate
+- review for scope control and maintainability
+
+### Deliverables
+- tea list view
+- tea detail view
+- create tea
+- update tea
+- delete tea
+- minimal loading state
+- basic error state
+
+### Validation
+- `pytest -q`
+- `ruff check .`
+- `ruff format --check .`
+- frontend startup or build check passes once the client exists
 
 ---
 
@@ -221,7 +255,7 @@ Make the repo portfolio-ready.
 - social features
 - recommendations
 - scraping
-- frontend
+- frontend beyond the delayed demo client milestones
 - background workers
 - AI tasting analysis
 
