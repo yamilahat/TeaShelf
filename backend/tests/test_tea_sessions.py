@@ -1,3 +1,5 @@
+﻿from datetime import datetime, timezone
+
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -29,7 +31,12 @@ def session_payload(
 
 def serialized_session_payload(payload: dict) -> dict:
     serialized = payload.copy()
-    serialized["session_date"] = serialized["session_date"].removesuffix("Z")
+    session_date = datetime.fromisoformat(
+        serialized["session_date"].replace("Z", "+00:00")
+    )
+    serialized["session_date"] = (
+        session_date.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+    )
     return serialized
 
 
@@ -53,6 +60,35 @@ def test_create_session_returns_created_session(client: TestClient) -> None:
     assert response.json() == serialized_session_payload(payload)
 
 
+def test_create_session_normalizes_offset_timestamps_to_utc(
+    client: TestClient,
+    db_session: Session,
+) -> None:
+    payload = session_payload(
+        tea_id=create_tea(client),
+        session_date="2024-05-01T12:30:00+03:00",
+    )
+
+    response = client.post("/sessions", json=payload)
+
+    assert response.status_code == 201
+    assert response.json() == {
+        **payload,
+        "session_date": "2024-05-01T09:30:00Z",
+    }
+
+    session = db_session.scalar(select(TeaSession))
+    assert session is not None
+    assert session.session_date == datetime(
+        2024,
+        5,
+        1,
+        9,
+        30,
+        tzinfo=timezone.utc,
+    )
+
+
 def test_create_session_allows_optional_fields_to_be_null(client: TestClient) -> None:
     payload = session_payload(
         tea_id=create_tea(client),
@@ -71,6 +107,19 @@ def test_create_session_returns_422_when_required_fields_are_missing(
     client: TestClient,
 ) -> None:
     response = client.post("/sessions", json={"tea_id": 1})
+
+    assert response.status_code == 422
+
+
+
+def test_create_session_returns_422_for_naive_timestamps(client: TestClient) -> None:
+    response = client.post(
+        "/sessions",
+        json={
+            "tea_id": create_tea(client),
+            "session_date": "2024-05-01T09:30:00",
+        },
+    )
 
     assert response.status_code == 422
 
