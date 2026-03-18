@@ -60,6 +60,10 @@ def update_session(
     if not tea_session:
         raise HTTPException(status_code=404, detail="Tea session not found")
 
+    tea = db.get(Tea, payload.tea_id)
+    if not tea:
+        raise HTTPException(status_code=404, detail="Tea not found")
+    
     update_data = payload.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(tea_session, field, value)
