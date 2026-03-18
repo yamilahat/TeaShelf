@@ -111,7 +111,6 @@ def test_create_session_returns_422_when_required_fields_are_missing(
     assert response.status_code == 422
 
 
-
 def test_create_session_returns_422_for_naive_timestamps(client: TestClient) -> None:
     response = client.post(
         "/sessions",
@@ -122,6 +121,26 @@ def test_create_session_returns_422_for_naive_timestamps(client: TestClient) -> 
     )
 
     assert response.status_code == 422
+
+
+def test_create_session_returns_404_for_missing_tea(client: TestClient) -> None:
+    response = client.post(
+        "/sessions",
+        json=session_payload(tea_id=999),
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Tea not found"}
+
+
+def test_create_session_response_includes_session_id(client: TestClient) -> None:
+    response = client.post(
+        "/sessions",
+        json=session_payload(tea_id=create_tea(client)),
+    )
+
+    assert response.status_code == 201
+    assert response.json()["id"] == 1
 
 
 def test_list_sessions_returns_sessions_in_creation_order(client: TestClient) -> None:
@@ -149,6 +168,23 @@ def test_list_sessions_returns_sessions_in_creation_order(client: TestClient) ->
     ]
 
 
+def test_list_sessions_includes_session_ids(
+    client: TestClient,
+    db_session: Session,
+) -> None:
+    session_id, payload = create_session(client, db_session)
+
+    response = client.get("/sessions")
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "id": session_id,
+            **serialized_session_payload(payload),
+        }
+    ]
+
+
 def test_get_session_returns_single_session(
     client: TestClient,
     db_session: Session,
@@ -159,6 +195,21 @@ def test_get_session_returns_single_session(
 
     assert response.status_code == 200
     assert response.json() == serialized_session_payload(payload)
+
+
+def test_get_session_includes_session_id(
+    client: TestClient,
+    db_session: Session,
+) -> None:
+    session_id, payload = create_session(client, db_session)
+
+    response = client.get(f"/sessions/{session_id}")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": session_id,
+        **serialized_session_payload(payload),
+    }
 
 
 def test_get_session_returns_404_for_missing_session(client: TestClient) -> None:
@@ -185,6 +236,21 @@ def test_update_session_replaces_existing_fields(
 
     assert response.status_code == 200
     assert response.json() == serialized_session_payload(payload)
+
+
+def test_update_session_returns_404_for_missing_tea(
+    client: TestClient,
+    db_session: Session,
+) -> None:
+    session_id, _ = create_session(client, db_session)
+
+    response = client.put(
+        f"/sessions/{session_id}",
+        json=session_payload(tea_id=999),
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Tea not found"}
 
 
 def test_update_session_allows_clearing_optional_fields(
