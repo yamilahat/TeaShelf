@@ -1,7 +1,6 @@
-from tkinter import N
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
-from datetime import datetime
 
 
 class SessionCreate(BaseModel):
