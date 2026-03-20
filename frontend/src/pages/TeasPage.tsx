@@ -1,14 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { type TeaFilters, listTeas } from "../features/teas/api";
 
+function useDebounced<T>(value: T, delay = 300): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(id);
+  }, [value, delay]);
+  return debounced;
+}
+
 export function TeasPage() {
   const [filters, setFilters] = useState<TeaFilters>({});
+  const debouncedFilters = useDebounced(filters);
 
   const { data, isPending, isError, error, refetch, isFetching } = useQuery({
-    queryKey: ["teas", filters],
-    queryFn: () => listTeas(filters),
+    queryKey: ["teas", debouncedFilters],
+    queryFn: () => listTeas(debouncedFilters),
   });
 
   const hasFilters = !!(filters.name || filters.vendor || filters.tea_type);
@@ -44,28 +54,42 @@ export function TeasPage() {
       </div>
 
       <div className="filter-bar">
-        <input
-          type="text"
-          placeholder="Search by name…"
-          value={filters.name ?? ""}
-          onChange={(e) => handleFilter("name", e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Filter by vendor…"
-          value={filters.vendor ?? ""}
-          onChange={(e) => handleFilter("vendor", e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Filter by type…"
-          value={filters.tea_type ?? ""}
-          onChange={(e) => handleFilter("tea_type", e.target.value)}
-        />
+        <div className="field">
+          <label className="field__label">Name</label>
+          <input
+            className="field__input"
+            type="text"
+            placeholder="Search teas…"
+            value={filters.name ?? ""}
+            onChange={(e) => handleFilter("name", e.target.value)}
+          />
+        </div>
+        <div className="field">
+          <label className="field__label">Vendor</label>
+          <input
+            className="field__input"
+            type="text"
+            placeholder="e.g. Teavivre"
+            value={filters.vendor ?? ""}
+            onChange={(e) => handleFilter("vendor", e.target.value)}
+          />
+        </div>
+        <div className="field">
+          <label className="field__label">Type</label>
+          <input
+            className="field__input"
+            type="text"
+            placeholder="e.g. Green, Oolong…"
+            value={filters.tea_type ?? ""}
+            onChange={(e) => handleFilter("tea_type", e.target.value)}
+          />
+        </div>
         {hasFilters && (
-          <button type="button" className="button button--secondary" onClick={clearFilters}>
-            Clear
-          </button>
+          <div className="filter-bar__actions">
+            <button type="button" className="button button--secondary" onClick={clearFilters}>
+              Clear filters
+            </button>
+          </div>
         )}
       </div>
 
