@@ -1,25 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { Link } from "react-router";
-import { type TeaFilters, listTeas } from "../features/teas/api";
+import { listTeas } from "../features/teas/api";
 
 export function TeasPage() {
-  const [filters, setFilters] = useState<TeaFilters>({});
-
   const { data, isPending, isError, error, refetch, isFetching } = useQuery({
-    queryKey: ["teas", filters],
-    queryFn: () => listTeas(filters),
+    queryKey: ["teas"],
+    queryFn: listTeas,
   });
-
-  const hasFilters = !!(filters.name || filters.vendor || filters.tea_type);
-
-  function handleFilter(field: keyof TeaFilters, value: string) {
-    setFilters((prev) => ({ ...prev, [field]: value || undefined }));
-  }
-
-  function clearFilters() {
-    setFilters({});
-  }
 
   return (
     <section className="stack">
@@ -41,32 +28,6 @@ export function TeasPage() {
             Add tea
           </Link>
         </div>
-      </div>
-
-      <div className="filter-bar">
-        <input
-          type="text"
-          placeholder="Search by name…"
-          value={filters.name ?? ""}
-          onChange={(e) => handleFilter("name", e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Filter by vendor…"
-          value={filters.vendor ?? ""}
-          onChange={(e) => handleFilter("vendor", e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Filter by type…"
-          value={filters.tea_type ?? ""}
-          onChange={(e) => handleFilter("tea_type", e.target.value)}
-        />
-        {hasFilters && (
-          <button type="button" className="button button--secondary" onClick={clearFilters}>
-            Clear
-          </button>
-        )}
       </div>
 
       {isPending ? <p className="panel muted">Loading teas...</p> : null}
