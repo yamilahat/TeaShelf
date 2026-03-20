@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -29,10 +29,20 @@ def create_tea(
 
 
 @router.get("", response_model=list[TeaRead])
-def list_teas(db: Session = Depends(get_db_session)) -> list[Tea]:
+def list_teas(
+    db: Session = Depends(get_db_session),
+    tea_type: str | None = Query(default=None),
+    vendor: str | None = Query(default=None),
+    name: str | None = Query(default=None),
+) -> list[Tea]:
     stmt = select(Tea).order_by(Tea.id.asc())
-    teas = list(db.scalars(stmt).all())
-    return teas
+    if tea_type:
+        stmt = stmt.where(Tea.tea_type == tea_type)
+    if vendor:
+        stmt = stmt.where(Tea.vendor == vendor)
+    if name:
+        stmt = stmt.where(Tea.name.ilike(f"%{name}%"))
+    return list(db.scalars(stmt).all())
 
 
 @router.get("/{tea_id}", response_model=TeaRead)
