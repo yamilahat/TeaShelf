@@ -116,3 +116,141 @@ def test_delete_tea_returns_404_for_missing_tea(client: TestClient) -> None:
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Tea not found"}
+
+
+# --- Milestone 5: filtering and search ---
+
+
+def test_list_teas_filter_by_tea_type(client: TestClient) -> None:
+    client.post("/teas", json={"name": "Long Jing", "tea_type": "green"})
+    client.post("/teas", json={"name": "Da Hong Pao", "tea_type": "oolong"})
+
+    response = client.get("/teas", params={"tea_type": "green"})
+
+    assert response.status_code == 200
+    results = response.json()
+    assert len(results) == 1
+    assert results[0]["name"] == "Long Jing"
+
+
+def test_list_teas_filter_by_vendor(client: TestClient) -> None:
+    client.post("/teas", json={"name": "Gyokuro", "vendor": "Ippodo"})
+    client.post("/teas", json={"name": "Sencha", "vendor": "Lupicia"})
+
+    response = client.get("/teas", params={"vendor": "Ippodo"})
+
+    assert response.status_code == 200
+    results = response.json()
+    assert len(results) == 1
+    assert results[0]["name"] == "Gyokuro"
+
+
+def test_list_teas_filter_by_name_exact_match(client: TestClient) -> None:
+    client.post("/teas", json={"name": "Gyokuro"})
+    client.post("/teas", json={"name": "Bancha"})
+
+    response = client.get("/teas", params={"name": "Gyokuro"})
+
+    assert response.status_code == 200
+    results = response.json()
+    assert len(results) == 1
+    assert results[0]["name"] == "Gyokuro"
+
+
+def test_list_teas_filter_by_name_partial_match(client: TestClient) -> None:
+    client.post("/teas", json={"name": "Gyokuro"})
+    client.post("/teas", json={"name": "Bancha"})
+
+    response = client.get("/teas", params={"name": "yoku"})
+
+    assert response.status_code == 200
+    results = response.json()
+    assert len(results) == 1
+    assert results[0]["name"] == "Gyokuro"
+
+
+def test_list_teas_filter_by_name_case_insensitive(client: TestClient) -> None:
+    client.post("/teas", json={"name": "Gyokuro"})
+
+    response = client.get("/teas", params={"name": "GYOKURO"})
+
+    assert response.status_code == 200
+    results = response.json()
+    assert len(results) == 1
+    assert results[0]["name"] == "Gyokuro"
+
+
+def test_list_teas_filter_by_tea_type_no_match(client: TestClient) -> None:
+    client.post("/teas", json={"name": "Long Jing", "tea_type": "green"})
+
+    response = client.get("/teas", params={"tea_type": "white"})
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_list_teas_filter_by_vendor_no_match(client: TestClient) -> None:
+    client.post("/teas", json={"name": "Gyokuro", "vendor": "Ippodo"})
+
+    response = client.get("/teas", params={"vendor": "Unknown Vendor"})
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_list_teas_filter_by_name_no_match(client: TestClient) -> None:
+    client.post("/teas", json={"name": "Gyokuro"})
+
+    response = client.get("/teas", params={"name": "zzznomatch"})
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_list_teas_combined_tea_type_and_vendor(client: TestClient) -> None:
+    client.post("/teas", json={"name": "Green A", "tea_type": "green", "vendor": "Ippodo"})
+    client.post("/teas", json={"name": "Oolong A", "tea_type": "oolong", "vendor": "Ippodo"})
+    client.post("/teas", json={"name": "Green B", "tea_type": "green", "vendor": "Lupicia"})
+
+    response = client.get("/teas", params={"tea_type": "green", "vendor": "Ippodo"})
+
+    assert response.status_code == 200
+    results = response.json()
+    assert len(results) == 1
+    assert results[0]["name"] == "Green A"
+
+
+def test_list_teas_combined_name_and_tea_type(client: TestClient) -> None:
+    client.post("/teas", json={"name": "Long Jing", "tea_type": "green"})
+    client.post("/teas", json={"name": "Long An", "tea_type": "oolong"})
+
+    response = client.get("/teas", params={"name": "Long", "tea_type": "green"})
+
+    assert response.status_code == 200
+    results = response.json()
+    assert len(results) == 1
+    assert results[0]["name"] == "Long Jing"
+
+
+def test_list_teas_combined_all_three_filters(client: TestClient) -> None:
+    client.post("/teas", json={"name": "Gyokuro Special", "tea_type": "green", "vendor": "Ippodo"})
+    client.post("/teas", json={"name": "Gyokuro Basic", "tea_type": "green", "vendor": "Lupicia"})
+    client.post("/teas", json={"name": "Gyokuro Aged", "tea_type": "white", "vendor": "Ippodo"})
+
+    response = client.get("/teas", params={"name": "Gyokuro", "tea_type": "green", "vendor": "Ippodo"})
+
+    assert response.status_code == 200
+    results = response.json()
+    assert len(results) == 1
+    assert results[0]["name"] == "Gyokuro Special"
+
+
+def test_list_teas_no_filters_returns_all(client: TestClient) -> None:
+    client.post("/teas", json={"name": "Tea A", "tea_type": "green"})
+    client.post("/teas", json={"name": "Tea B", "tea_type": "oolong"})
+    client.post("/teas", json={"name": "Tea C"})
+
+    response = client.get("/teas")
+
+    assert response.status_code == 200
+    assert len(response.json()) == 3
