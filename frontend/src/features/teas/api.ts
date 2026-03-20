@@ -19,8 +19,19 @@ export type TeaInput = {
   notes?: string | null;
 };
 
-export function listTeas() {
-  return apiFetch<Tea[]>("/teas");
+export type TeaFilters = {
+  tea_type?: string;
+  vendor?: string;
+  name?: string;
+};
+
+export function listTeas(filters?: TeaFilters) {
+  const params = new URLSearchParams();
+  if (filters?.tea_type) params.set("tea_type", filters.tea_type);
+  if (filters?.vendor) params.set("vendor", filters.vendor);
+  if (filters?.name) params.set("name", filters.name);
+  const qs = params.toString();
+  return apiFetch<Tea[]>(qs ? `/teas?${qs}` : "/teas");
 }
 
 export function getTea(teaId: number) {
