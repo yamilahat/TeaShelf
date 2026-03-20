@@ -7,7 +7,7 @@ from app.models.tea import Tea
 from app.models.tea_session import TeaSession
 from app.schemas.tea_session import SessionCreate, SessionRead, SessionUpdate
 
-router = APIRouter(prefix="/sessions", tags=["teas"])
+router = APIRouter(prefix="/sessions", tags=["sessions"])
 
 
 @router.post("", response_model=SessionRead, status_code=status.HTTP_201_CREATED)
