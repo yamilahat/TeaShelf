@@ -1,13 +1,16 @@
 import datetime
-from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, ForeignKey, Integer, String, Text
+from sqlalchemy import ForeignKey, String, Text, Integer, Date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
-if TYPE_CHECKING:
-    from app.models.tea import Tea
+
+class TeawarePreferredType(Base):
+    __tablename__ = "teaware_preferred_types"
+
+    teaware_id: Mapped[int] = mapped_column(ForeignKey("teaware.id"), primary_key=True)
+    tea_type: Mapped[str] = mapped_column(String(50), primary_key=True)
 
 
 class Teaware(Base):
@@ -20,10 +23,9 @@ class Teaware(Base):
     volume_ml: Mapped[int | None] = mapped_column(Integer, nullable=True)
     material: Mapped[str | None] = mapped_column(String(80), nullable=True)
     vendor: Mapped[str | None] = mapped_column(String(80), nullable=True)
-    preferred_tea_id: Mapped[int | None] = mapped_column(
-        ForeignKey("teas.id"), nullable=True, index=True
-    )
     acquired_date: Mapped[datetime.date | None] = mapped_column(Date, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    preferred_tea: Mapped["Tea | None"] = relationship()
+    preferred_tea_types: Mapped[list["TeawarePreferredType"]] = relationship(
+        cascade="all, delete-orphan"
+    )

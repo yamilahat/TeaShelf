@@ -92,6 +92,21 @@ def test_update_tea_replaces_existing_fields(client: TestClient) -> None:
     assert response.json() == {"id": tea_id, **payload}
 
 
+def test_create_tea_returns_422_for_unknown_tea_type(client: TestClient) -> None:
+    response = client.post("/teas", json={"name": "Mystery Tea", "tea_type": "purple"})
+
+    assert response.status_code == 422
+
+
+def test_update_tea_returns_422_for_unknown_tea_type(client: TestClient) -> None:
+    create_response = client.post("/teas", json={"name": "Long Jing"})
+    tea_id = create_response.json()["id"]
+
+    response = client.put(f"/teas/{tea_id}", json={"name": "Long Jing", "tea_type": "purple"})
+
+    assert response.status_code == 422
+
+
 def test_update_tea_returns_404_for_missing_tea(client: TestClient) -> None:
     response = client.put("/teas/999", json={"name": "Missing"})
 

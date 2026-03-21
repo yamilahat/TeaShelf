@@ -25,16 +25,20 @@ def upgrade() -> None:
         sa.Column('volume_ml', sa.Integer(), nullable=True),
         sa.Column('material', sa.String(80), nullable=True),
         sa.Column('vendor', sa.String(80), nullable=True),
-        sa.Column('preferred_tea_id', sa.Integer(), sa.ForeignKey('teas.id'), nullable=True),
         sa.Column('acquired_date', sa.Date(), nullable=True),
         sa.Column('notes', sa.Text(), nullable=True),
         sa.PrimaryKeyConstraint('id'),
     )
     op.create_index(op.f('ix_teaware_name'), 'teaware', ['name'], unique=False)
-    op.create_index(op.f('ix_teaware_preferred_tea_id'), 'teaware', ['preferred_tea_id'], unique=False)
+    op.create_table(
+        'teaware_preferred_types',
+        sa.Column('teaware_id', sa.Integer(), sa.ForeignKey('teaware.id'), nullable=False),
+        sa.Column('tea_type', sa.String(50), nullable=False),
+        sa.PrimaryKeyConstraint('teaware_id', 'tea_type'),
+    )
 
 
 def downgrade() -> None:
-    op.drop_index(op.f('ix_teaware_preferred_tea_id'), table_name='teaware')
+    op.drop_table('teaware_preferred_types')
     op.drop_index(op.f('ix_teaware_name'), table_name='teaware')
     op.drop_table('teaware')
