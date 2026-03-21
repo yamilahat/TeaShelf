@@ -4,16 +4,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router";
 import { deleteTeaware, getTeaware, updateTeaware } from "../features/teaware/api";
 import { TeawareForm } from "../features/teaware/TeawareForm";
+import { teaTypeLabel } from "../features/tea-types/api";
 import {
   type TeawareFormState,
   toTeawareFormState,
   toTeawarePayload,
 } from "../features/teaware/formState";
-import { TEA_TYPES } from "../lib/teaTypes";
-
-function teaTypeLabel(value: string) {
-  return TEA_TYPES.find((t) => t.value === value)?.label ?? value;
-}
 
 export function TeawareDetailPage() {
   const params = useParams();
