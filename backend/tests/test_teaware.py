@@ -279,11 +279,11 @@ def test_update_teaware_allows_changing_preferred_types(client: TestClient) -> N
 
     response = client.put(
         f"/teaware/{teaware_id}",
-        json=teaware_payload(preferred_tea_types=["ripe pu-erh", "raw pu-erh"]),
+        json=teaware_payload(preferred_tea_types=["shou pu-erh (ripe)", "sheng pu-erh (raw)"]),
     )
 
     assert response.status_code == 200
-    assert set(response.json()["preferred_tea_types"]) == {"ripe pu-erh", "raw pu-erh"}
+    assert set(response.json()["preferred_tea_types"]) == {"shou pu-erh (ripe)", "sheng pu-erh (raw)"}
 
 
 # --- DELETE ---
@@ -311,7 +311,7 @@ def test_delete_teaware_returns_404_for_missing_item(client: TestClient) -> None
 
 
 def test_all_valid_tea_types_are_accepted(client: TestClient) -> None:
-    all_types = ["green", "white", "black", "red", "yellow", "oolong", "ripe pu-erh", "raw pu-erh"]
+    all_types = ["green", "white", "black", "red", "yellow", "oolong", "shou pu-erh (ripe)", "sheng pu-erh (raw)"]
     payload = teaware_payload(preferred_tea_types=all_types)
 
     response = client.post("/teaware", json=payload)

@@ -10,7 +10,9 @@
       "Bash(alembic downgrade:*)",
       "Bash(alembic stamp:*)",
       "Bash(alembic upgrade:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(alembic heads:*)",
+      "Bash(alembic revision:*)"
     ]
   }
 }

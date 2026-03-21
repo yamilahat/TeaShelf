@@ -1,4 +1,4 @@
-﻿from datetime import datetime, timezone
+from datetime import date
 
 from fastapi.testclient import TestClient
 from sqlalchemy import select
@@ -15,10 +15,11 @@ def create_tea(client: TestClient) -> int:
 
 def session_payload(
     tea_id: int,
-    session_date: str = "2024-05-01T09:30:00Z",
+    session_date: str = "2024-05-01",
     steeps_count: int | None = 5,
     rating: int | None = 8,
     notes: str | None = "Sweet and grassy",
+    teaware_id: int | None = None,
 ) -> dict:
     return {
         "tea_id": tea_id,
@@ -26,17 +27,19 @@ def session_payload(
         "steeps_count": steeps_count,
         "rating": rating,
         "notes": notes,
+        "teaware_id": teaware_id,
     }
 
 
 def serialized_session_payload(payload: dict, session_id: int | None = None) -> dict:
     serialized = payload.copy()
-    session_date = datetime.fromisoformat(
-        serialized["session_date"].replace("Z", "+00:00")
-    )
-    serialized["session_date"] = (
-        session_date.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
-    )
+    raw = serialized["session_date"]
+    # Accept both YYYY-MM-DD (input) and DD/MM/YYYY (already serialized)
+    try:
+        d = date.fromisoformat(raw)
+    except ValueError:
+        d = date(int(raw[6:]), int(raw[3:5]), int(raw[:2]))
+    serialized["session_date"] = d.strftime("%d/%m/%Y")
     if session_id is not None:
         serialized["id"] = session_id
     return serialized
@@ -44,9 +47,7 @@ def serialized_session_payload(payload: dict, session_id: int | None = None) -> 
 
 def create_session(client: TestClient, db_session: Session) -> tuple[int, dict]:
     payload = session_payload(create_tea(client))
-
     response = client.post("/sessions", json=payload)
-
     assert response.status_code == 201
     session = db_session.scalar(select(TeaSession))
     assert session is not None
@@ -62,33 +63,22 @@ def test_create_session_returns_created_session(client: TestClient) -> None:
     assert response.json() == serialized_session_payload(payload, session_id=1)
 
 
-def test_create_session_normalizes_offset_timestamps_to_utc(
-    client: TestClient,
-    db_session: Session,
-) -> None:
-    payload = session_payload(
-        tea_id=create_tea(client),
-        session_date="2024-05-01T12:30:00+03:00",
-    )
+def test_create_session_accepts_iso_date_format(client: TestClient) -> None:
+    payload = session_payload(tea_id=create_tea(client), session_date="2024-05-01")
 
     response = client.post("/sessions", json=payload)
 
     assert response.status_code == 201
-    assert response.json() == {
-        **serialized_session_payload(payload, session_id=1),
-        "session_date": "2024-05-01T09:30:00Z",
-    }
+    assert response.json()["session_date"] == "01/05/2024"
 
-    session = db_session.scalar(select(TeaSession))
-    assert session is not None
-    assert session.session_date == datetime(
-        2024,
-        5,
-        1,
-        9,
-        30,
-        tzinfo=timezone.utc,
-    )
+
+def test_create_session_accepts_ddmmyyyy_format(client: TestClient) -> None:
+    payload = session_payload(tea_id=create_tea(client), session_date="01/05/2024")
+
+    response = client.post("/sessions", json=payload)
+
+    assert response.status_code == 201
+    assert response.json()["session_date"] == "01/05/2024"
 
 
 def test_create_session_allows_optional_fields_to_be_null(client: TestClient) -> None:
@@ -113,33 +103,24 @@ def test_create_session_returns_422_when_required_fields_are_missing(
     assert response.status_code == 422
 
 
-def test_create_session_returns_422_for_naive_timestamps(client: TestClient) -> None:
+def test_create_session_returns_422_for_invalid_date(client: TestClient) -> None:
     response = client.post(
         "/sessions",
-        json={
-            "tea_id": create_tea(client),
-            "session_date": "2024-05-01T09:30:00",
-        },
+        json={"tea_id": create_tea(client), "session_date": "not-a-date"},
     )
 
     assert response.status_code == 422
 
 
 def test_create_session_returns_404_for_missing_tea(client: TestClient) -> None:
-    response = client.post(
-        "/sessions",
-        json=session_payload(tea_id=999),
-    )
+    response = client.post("/sessions", json=session_payload(tea_id=999))
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Tea not found"}
 
 
 def test_create_session_response_includes_session_id(client: TestClient) -> None:
-    response = client.post(
-        "/sessions",
-        json=session_payload(tea_id=create_tea(client)),
-    )
+    response = client.post("/sessions", json=session_payload(tea_id=create_tea(client)))
 
     assert response.status_code == 201
     assert response.json()["id"] == 1
@@ -149,7 +130,7 @@ def test_list_sessions_returns_sessions_in_creation_order(client: TestClient) ->
     first_payload = session_payload(create_tea(client))
     second_payload = session_payload(
         tea_id=create_tea(client),
-        session_date="2024-05-02T11:00:00Z",
+        session_date="2024-05-02",
         steeps_count=7,
         rating=9,
         notes="Floral finish",
@@ -194,18 +175,6 @@ def test_get_session_returns_single_session(
     assert response.json() == serialized_session_payload(payload, session_id=session_id)
 
 
-def test_get_session_includes_session_id(
-    client: TestClient,
-    db_session: Session,
-) -> None:
-    session_id, payload = create_session(client, db_session)
-
-    response = client.get(f"/sessions/{session_id}")
-
-    assert response.status_code == 200
-    assert response.json() == serialized_session_payload(payload, session_id=session_id)
-
-
 def test_get_session_returns_404_for_missing_session(client: TestClient) -> None:
     response = client.get("/sessions/999")
 
@@ -220,7 +189,7 @@ def test_update_session_replaces_existing_fields(
     session_id, _ = create_session(client, db_session)
     payload = session_payload(
         tea_id=create_tea(client),
-        session_date="2024-06-10T14:15:00Z",
+        session_date="2024-06-10",
         steeps_count=3,
         rating=6,
         notes="Shorter session",
@@ -238,10 +207,7 @@ def test_update_session_returns_404_for_missing_tea(
 ) -> None:
     session_id, _ = create_session(client, db_session)
 
-    response = client.put(
-        f"/sessions/{session_id}",
-        json=session_payload(tea_id=999),
-    )
+    response = client.put(f"/sessions/{session_id}", json=session_payload(tea_id=999))
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Tea not found"}
@@ -269,10 +235,7 @@ def test_update_session_allows_clearing_optional_fields(
 def test_update_session_returns_404_for_missing_session(client: TestClient) -> None:
     response = client.put(
         "/sessions/999",
-        json={
-            "tea_id": 1,
-            "session_date": "2024-05-01T09:30:00Z",
-        },
+        json={"tea_id": 1, "session_date": "2024-05-01"},
     )
 
     assert response.status_code == 404
@@ -315,3 +278,24 @@ def test_session_routes_validate_integer_path_parameters(client: TestClient) -> 
     response = client.get("/sessions/not-an-int")
 
     assert response.status_code == 422
+
+
+def test_create_session_with_teaware(client: TestClient) -> None:
+    tea_id = create_tea(client)
+    teaware_response = client.post("/teaware", json={"name": "Gaiwan"})
+    teaware_id = teaware_response.json()["id"]
+
+    payload = session_payload(tea_id=tea_id, teaware_id=teaware_id)
+    response = client.post("/sessions", json=payload)
+
+    assert response.status_code == 201
+    assert response.json()["teaware_id"] == teaware_id
+
+
+def test_create_session_teaware_id_is_optional(client: TestClient) -> None:
+    payload = session_payload(tea_id=create_tea(client), teaware_id=None)
+
+    response = client.post("/sessions", json=payload)
+
+    assert response.status_code == 201
+    assert response.json()["teaware_id"] is None
