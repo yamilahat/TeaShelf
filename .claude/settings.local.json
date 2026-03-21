@@ -3,7 +3,13 @@
     "allow": [
       "Bash(gh issue:*)",
       "Skill(update-config)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(alembic history:*)",
+      "Bash(alembic current:*)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(alembic downgrade:*)",
+      "Bash(alembic stamp:*)",
+      "Bash(alembic upgrade:*)"
     ]
   }
 }
