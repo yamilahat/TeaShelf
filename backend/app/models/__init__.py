@@ -7,5 +7,6 @@ all registered metadata before autogenerating migrations.
 from app.db.base import Base
 from app.models.tea import Tea
 from app.models.tea_session import TeaSession
+from app.models.teaware import Teaware
 
-__all__ = ["Base", "Tea", "TeaSession"]
+__all__ = ["Base", "Tea", "TeaSession", "Teaware"]
