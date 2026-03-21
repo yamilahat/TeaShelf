@@ -40,6 +40,10 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
+# Claude Code (local state)
+.claude/settings.local.json
+.claude/worktrees/
+
 # Logs
 *.log
 
