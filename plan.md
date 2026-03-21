@@ -10,7 +10,7 @@ Do not move to the next milestone until the current one is complete and validate
 
 ## Rules
 - Keep scope tight.
-- Do not add features outside spec.md.
+- Do not add features outside the plan.
 - Prefer one small clean step over one big patch.
 - Human writes core decisions and important logic.
 - AI helps with scaffolding, tests, review, and isolated repetitive pieces.
@@ -18,147 +18,146 @@ Do not move to the next milestone until the current one is complete and validate
 
 ---
 
-## Milestone 1: project skeleton
+## Completed milestones
+
+| # | Milestone | Status |
+|---|---|---|
+| 1 | Project skeleton | ✅ Done |
+| 2 | Database setup | ✅ Done |
+| 3 | Tea CRUD API | ✅ Done |
+| 3.5 | Demo client shell (frontend) | ✅ Done |
+| 4 | Tasting session API | ✅ Done |
+| 5 | Filtering and search | ✅ Done |
+| — | Teaware model, CRUD, UI | ✅ Done |
+| — | Tea type enum + searchable dropdown | ✅ Done |
+| — | Date inputs: free text → native date picker | ✅ Done |
+
+---
+
+## Milestone 6: Simple stats & dashboard
 
 ### Goal
-Create the minimal backend structure and get the app running.
+Add lightweight stats and a home page to make the product feel complete.
 
 ### Human-owned
-- choose folder structure
-- choose naming conventions
-- choose initial app layout
+- Which stats matter
+- Whether stats live in a new `/stats` endpoint or are computed client-side from existing data
 
 ### AI-assisted allowed
-- scaffold folders/files
-- generate minimal FastAPI entrypoint
-- generate health endpoint
-- suggest a clean starter structure
+- Query boilerplate
+- Response schema
+- Tests
+- Frontend dashboard component
 
 ### Deliverables
-- backend structure exists
-- FastAPI app starts
-- `/health` endpoint returns 200
-- one basic test exists
+- `GET /stats` endpoint: total teas, total sessions, average rating, most-brewed tea, sessions this month
+- `/dashboard` page showing those stats
+- Aggregated stats on TeaDetailPage: session count, avg rating, last brewed date
 
 ### Validation
 - `pytest -q`
 - `ruff check .`
+- Dashboard renders without errors
 
 ---
 
-## Milestone 2: database setup
+## Milestone 6.5: UX hardening
 
 ### Goal
-Set up database connection, models, and migrations.
+Fix the small issues that make the app feel unpolished.
 
 ### Human-owned
-- decide model fields
-- decide entity relationships
-- decide what belongs in Tea vs TastingSession
+- Rating scale decision (0–10)
+- Whether to keep inline session creation or move to dedicated page
 
 ### AI-assisted allowed
-- generate SQLModel or SQLAlchemy boilerplate
-- generate Alembic setup
-- review model design for missing edge cases
-- generate migration skeleton if requested
+- Route/component scaffolding
+- Test generation for new constraints
 
 ### Deliverables
-- Tea model exists
-- TastingSession model exists
-- initial migration exists
-- database tables can be created
+- Sessions list sorted newest-first (`ORDER BY session_date DESC`)
+- Rating capped 0–10 in backend schema (`ge=0, le=10`) and form
+- Session creation moved to `/sessions/new` (SessionsPage becomes list-only)
+- Session filtering by tea and date range
+
+### Validation
+- `pytest -q` · new tests for sort order and rating bounds
+- `ruff check .`
+
+---
+
+## Milestone 7: Brew parameters
+
+### Goal
+Capture the data that explains why a session tasted a certain way.
+
+### Human-owned
+- Final field list and whether `brew_method` is an enum or free text
+- Unit choices (°C vs °F, ml vs oz)
+
+### AI-assisted allowed
+- Migration skeleton
+- Schema + model boilerplate
+- Form fields
+- Tests
+
+### Proposed fields (nullable)
+- `brew_method` — enum: gongfu / western / grandpa / cold brew
+- `water_temp_c` — int
+- `steep_time_seconds` — int
+- `water_ml` — int
+- `leaf_grams` — float
 
 ### Validation
 - `alembic upgrade head`
 - `pytest -q`
-- `ruff check .`
+- Form renders new fields
 
 ---
 
-## Milestone 3: tea CRUD API
+## Milestone 8: Tea inventory depth
 
 ### Goal
-Add basic tea endpoints.
+Track the physical state of a tea (quantity remaining, lifecycle status).
 
 ### Human-owned
-- endpoint design
-- request/response shape
-- validation behavior
-- service/repository structure if used
+- Status enum values
+- Whether finished teas are hidden by default
 
-### AI-assisted allowed
-- route boilerplate
-- schema boilerplate
-- test case generation
-- review for missing validations
+### Proposed fields
+- `quantity_grams` (float, nullable)
+- `status` enum: `active | finished | wishlist`
 
 ### Deliverables
-- create tea
-- list teas
-- get tea by id
-- update tea
-- delete tea
+- Migration + model + schema update for Tea
+- TeaForm new fields
+- TeasPage filter by status
+- Tests
 
 ### Validation
+- `alembic upgrade head`
 - `pytest -q`
-- `ruff check .`
 
 ---
 
-## Milestone 3.5: demo client shell
+## Milestone 9: Polish & portfolio-ready
 
 ### Goal
-Build a minimal frontend shell that demonstrates the completed tea CRUD API.
+Make the repo presentable and explainable.
 
 ### Human-owned
-- choose frontend stack
-- choose basic page/layout structure
-- decide how much styling is worth doing for a demo
+- README narrative and architecture summary
+- Tradeoff explanations
 
 ### AI-assisted allowed
-- scaffold frontend shell
-- wire API calls to existing tea endpoints
-- generate basic component/test boilerplate
-- review for scope control and maintainability
+- README cleanup and formatting
+- Test coverage gap review
+- Code review pass for naming and consistency
 
 ### Deliverables
-- tea list view
-- tea detail view
-- create tea
-- update tea
-- delete tea
-- minimal loading state
-- basic error state
-
-### Validation
-- `pytest -q`
-- `ruff check .`
-- `ruff format --check .`
-- frontend startup or build check passes once the client exists
-
----
-
-## Milestone 4: tasting session API
-
-### Goal
-Allow logging and viewing tasting sessions tied to teas.
-
-### Human-owned
-- session logic
-- required vs optional fields
-- rules for linking sessions to teas
-
-### AI-assisted allowed
-- route boilerplate
-- test generation
-- validation review
-- small refactors
-
-### Deliverables
-- create tasting session
-- list tasting sessions for a tea
-- get tasting session
-- delete tasting session
+- Strong README with setup, architecture, tradeoffs
+- No dead code
+- Fresh `docker-compose up` works from a clean clone
 
 ### Validation
 - `pytest -q`
@@ -166,98 +165,32 @@ Allow logging and viewing tasting sessions tied to teas.
 
 ---
 
-## Milestone 5: filtering and search
+## Infrastructure — when to do each thing
 
-### Goal
-Make the tea inventory more usable.
+| Concern | When | Action |
+|---|---|---|
+| **Backups** | **Now** | `pg_dump` cron job; 7 rolling daily dumps |
+| **HTTPS** | Before any LAN/internet exposure | Caddy in `docker-compose.yml`; automatic TLS |
+| **Auth / multi-user** | Before sharing with others | FastAPI Users + JWT; adds `user_id` to every model — do before new features if multi-user planned |
+| **Encryption at rest** | Only if deploying to untrusted cloud | Cloud provider encrypted volume / LUKS |
 
-### Human-owned
-- decide filter behavior
-- decide supported query params
-- decide whether search is name/vendor-only or broader
-
-### AI-assisted allowed
-- help write query boilerplate
-- suggest indexing ideas
-- generate tests for filter combinations
-
-### Deliverables
-- filter by tea type
-- filter by vendor
-- optional text search by name
-- tests for search/filter behavior
-
-### Validation
-- `pytest -q`
-- `ruff check .`
+```
+Personal local only?   → Backups only
+Home server / LAN?     → Backups + HTTPS
+Internet / shared?     → Backups + HTTPS + Auth
+Cloud VM?              → All of the above + encrypted volume
+```
 
 ---
 
-## Milestone 6: simple stats
-
-### Goal
-Add a few lightweight stats to make the product feel complete.
-
-### Human-owned
-- choose which stats matter
-- keep scope small
-
-### AI-assisted allowed
-- small query helpers
-- response schema boilerplate
-- tests
-
-### Example stats
-- total teas
-- total tasting sessions
-- average rating
-- most tasted tea
-
-### Validation
-- `pytest -q`
-- `ruff check .`
-
----
-
-## Milestone 7: polish
-
-### Goal
-Make the repo portfolio-ready.
-
-### Human-owned
-- README narrative
-- project explanation
-- architecture summary
-- tradeoff explanations
-
-### AI-assisted allowed
-- README cleanup
-- docs formatting
-- test coverage gap review
-- code review pass for naming and consistency
-
-### Deliverables
-- strong README
-- clear setup instructions
-- clear explanation of architecture
-- cleaned-up code paths
-- no obvious dead code
-
-### Validation
-- `pytest -q`
-- `ruff check .`
-
----
-
-## Out of scope unless explicitly added later
-- auth
-- multi-user support
-- social features
-- recommendations
-- scraping
-- frontend beyond the delayed demo client milestones
-- background workers
-- AI tasting analysis
+## Out of scope unless explicitly added
+- Auth / multi-user support
+- Social features / sharing
+- Recommendations / AI analysis
+- Tea scraping / external data sources
+- Background workers
+- Photo uploads
+- Frontend pagination (until data size demands it)
 
 ---
 

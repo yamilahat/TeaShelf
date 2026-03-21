@@ -57,9 +57,7 @@ export function SessionForm({
           <span className="field__label">Session date</span>
           <input
             className="field__input"
-            type="text"
-            placeholder="DD/MM/YYYY"
-            pattern="\d{2}/\d{2}/\d{4}"
+            type="date"
             value={form.session_date}
             onChange={(event) => updateField("session_date", event.target.value)}
             required

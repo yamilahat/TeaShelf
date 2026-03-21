@@ -1,3 +1,4 @@
+import { ddmmyyyyToISO } from "../../lib/dateUtils";
 import type { Teaware, TeawareInput } from "./api";
 
 export type TeawareFormState = {
@@ -37,7 +38,7 @@ export function toTeawareFormState(teaware?: Teaware): TeawareFormState {
     material: teaware.material ?? "",
     vendor: teaware.vendor ?? "",
     preferred_tea_types: teaware.preferred_tea_types ?? [],
-    acquired_date: teaware.acquired_date ?? "",
+    acquired_date: teaware.acquired_date ? ddmmyyyyToISO(teaware.acquired_date) : "",
     notes: teaware.notes ?? "",
   };
 }
