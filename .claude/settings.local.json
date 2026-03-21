@@ -24,7 +24,9 @@
       "Bash(uv venv:*)",
       "Bash(ls D:/repos/TeaShelf/backend/app/__pycache__/enums*)",
       "Bash(docker compose:*)",
-      "Bash(.venv/Scripts/python -m alembic upgrade head)"
+      "Bash(.venv/Scripts/python -m alembic upgrade head)",
+      "Bash(gh repo:*)",
+      "Bash(gh label:*)"
     ]
   }
 }
