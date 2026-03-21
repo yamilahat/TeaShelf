@@ -12,6 +12,7 @@ from app.db.session import get_db_session
 from app.main import create_app
 from app.models import tea as tea_model  # noqa: F401
 from app.models import tea_session as t  # noqa: F401
+from app.models import teaware as teaware_model  # noqa: F401
 
 
 TEST_DATABASE_URL = "sqlite://"

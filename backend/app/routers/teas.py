@@ -37,9 +37,9 @@ def list_teas(
 ) -> list[Tea]:
     stmt = select(Tea).order_by(Tea.id.asc())
     if tea_type:
-        stmt = stmt.where(Tea.tea_type == tea_type)
+        stmt = stmt.where(Tea.tea_type.ilike(f"%{tea_type}%"))
     if vendor:
-        stmt = stmt.where(Tea.vendor == vendor)
+        stmt = stmt.where(Tea.vendor.ilike(f"%{vendor}%"))
     if name:
         stmt = stmt.where(Tea.name.ilike(f"%{name}%"))
     return list(db.scalars(stmt).all())

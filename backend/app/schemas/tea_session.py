@@ -1,25 +1,28 @@
-﻿from datetime import datetime, timezone
+from datetime import date
 
-from pydantic import (
-    AwareDatetime,
-    BaseModel,
-    ConfigDict,
-    field_serializer,
-    field_validator,
-)
+from pydantic import BaseModel, ConfigDict, field_serializer, field_validator
 
 
 class SessionBase(BaseModel):
     tea_id: int
-    session_date: AwareDatetime
+    teaware_id: int | None = None
+    session_date: date
     steeps_count: int | None = None
     rating: int | None = None
     notes: str | None = None
 
-    @field_validator("session_date")
+    @field_validator("session_date", mode="before")
     @classmethod
-    def normalize_session_date(cls, value: datetime) -> datetime:
-        return value.astimezone(timezone.utc)
+    def parse_session_date(cls, value: object) -> object:
+        if isinstance(value, str):
+            for fmt in ("%d/%m/%Y", "%Y-%m-%d"):
+                try:
+                    from datetime import datetime
+                    return datetime.strptime(value, fmt).date()
+                except ValueError:
+                    continue
+            raise ValueError(f"Invalid date format: {value!r}. Use DD/MM/YYYY or YYYY-MM-DD.")
+        return value
 
 
 class SessionCreate(SessionBase):
@@ -36,5 +39,5 @@ class SessionRead(SessionBase):
     id: int
 
     @field_serializer("session_date")
-    def serialize_session_date(self, value: datetime) -> str:
-        return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+    def serialize_session_date(self, value: date) -> str:
+        return value.strftime("%d/%m/%Y")

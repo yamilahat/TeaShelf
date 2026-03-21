@@ -21,6 +21,7 @@ def create_session(
 
     tea_session = TeaSession(
         tea_id=payload.tea_id,
+        teaware_id=payload.teaware_id,
         session_date=payload.session_date,
         steeps_count=payload.steeps_count,
         rating=payload.rating,

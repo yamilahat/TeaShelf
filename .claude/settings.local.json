@@ -2,7 +2,17 @@
   "permissions": {
     "allow": [
       "Bash(gh issue:*)",
-      "Skill(update-config)"
+      "Skill(update-config)",
+      "Bash(python:*)",
+      "Bash(alembic history:*)",
+      "Bash(alembic current:*)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(alembic downgrade:*)",
+      "Bash(alembic stamp:*)",
+      "Bash(alembic upgrade:*)",
+      "Bash(npx tsc:*)",
+      "Bash(alembic heads:*)",
+      "Bash(alembic revision:*)"
     ]
   }
 }
