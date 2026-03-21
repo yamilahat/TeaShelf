@@ -1,6 +1,6 @@
-from datetime import date
+from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_serializer, field_validator
 
 from app.enums import TeaType
 
@@ -15,6 +15,18 @@ class TeawareBase(BaseModel):
     preferred_tea_types: list[TeaType] = []
     acquired_date: date | None = None
     notes: str | None = None
+
+    @field_validator("acquired_date", mode="before")
+    @classmethod
+    def parse_acquired_date(cls, value: object) -> object:
+        if isinstance(value, str) and value:
+            for fmt in ("%d/%m/%Y", "%Y-%m-%d"):
+                try:
+                    return datetime.strptime(value, fmt).date()
+                except ValueError:
+                    continue
+            raise ValueError(f"Invalid date format: {value!r}. Use DD/MM/YYYY.")
+        return value
 
 
 class TeawareCreate(TeawareBase):
@@ -36,3 +48,9 @@ class TeawareRead(TeawareBase):
         if value and hasattr(value[0], "tea_type"):
             return [item.tea_type for item in value]
         return value
+
+    @field_serializer("acquired_date")
+    def serialize_acquired_date(self, value: date | None) -> str | None:
+        if value is None:
+            return None
+        return value.strftime("%d/%m/%Y")

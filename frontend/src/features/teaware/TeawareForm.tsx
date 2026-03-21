@@ -111,7 +111,9 @@ export function TeawareForm({
         <span className="field__label">Acquired date</span>
         <input
           className="field__input"
-          type="date"
+          type="text"
+          placeholder="DD/MM/YYYY"
+          pattern="\d{2}/\d{2}/\d{4}"
           value={form.acquired_date}
           onChange={(event) => updateField("acquired_date", event.target.value)}
         />

@@ -3,7 +3,8 @@ import { apiFetch } from "../../lib/api";
 export type TeaSession = {
   id: number;
   tea_id: number;
-  session_date: string;
+  teaware_id: number | null;
+  session_date: string; // DD/MM/YYYY from API
   steeps_count: number | null;
   rating: number | null;
   notes: string | null;
@@ -11,7 +12,8 @@ export type TeaSession = {
 
 export type TeaSessionInput = {
   tea_id: number;
-  session_date: string;
+  teaware_id?: number | null;
+  session_date: string; // YYYY-MM-DD
   steeps_count?: number | null;
   rating?: number | null;
   notes?: string | null;

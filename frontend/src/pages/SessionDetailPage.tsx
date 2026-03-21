@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router";
 import { listTeas } from "../features/teas/api";
+import { listTeaware } from "../features/teaware/api";
 import {
   deleteSession,
   getSession,
@@ -14,6 +15,12 @@ import {
   toTeaSessionFormState,
   toTeaSessionPayload,
 } from "../features/sessions/formState";
+
+/** Parse DD/MM/YYYY from API into a Date for display */
+function parseSessionDate(value: string): Date {
+  const [day, month, year] = value.split("/").map(Number);
+  return new Date(year, month - 1, day);
+}
 
 export function SessionDetailPage() {
   const params = useParams();
@@ -31,6 +38,12 @@ export function SessionDetailPage() {
     enabled: Number.isInteger(sessionId) && sessionId > 0,
   });
 
+  const teawareQuery = useQuery({
+    queryKey: ["teaware"],
+    queryFn: listTeaware,
+    enabled: Number.isInteger(sessionId) && sessionId > 0,
+  });
+
   if (!Number.isInteger(sessionId) || sessionId <= 0) {
     return (
       <section className="panel">
@@ -39,7 +52,7 @@ export function SessionDetailPage() {
     );
   }
 
-  if (sessionQuery.isPending || teasQuery.isPending) {
+  if (sessionQuery.isPending || teasQuery.isPending || teawareQuery.isPending) {
     return (
       <section className="panel">
         <p className="muted">Loading session...</p>
@@ -76,6 +89,7 @@ export function SessionDetailPage() {
       sessionId={sessionId}
       initialForm={toTeaSessionFormState(sessionQuery.data)}
       teas={teasQuery.data ?? []}
+      teaware={teawareQuery.data ?? []}
       teaId={sessionQuery.data.tea_id}
       sessionDate={sessionQuery.data.session_date}
     />
@@ -88,9 +102,10 @@ type SessionEditorProps = {
   teaId: number;
   sessionDate: string;
   teas: Awaited<ReturnType<typeof listTeas>>;
+  teaware: Awaited<ReturnType<typeof listTeaware>>;
 };
 
-function SessionEditor({ sessionId, initialForm, teaId, sessionDate, teas }: SessionEditorProps) {
+function SessionEditor({ sessionId, initialForm, teaId, sessionDate, teas, teaware }: SessionEditorProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<TeaSessionFormState>(initialForm);
@@ -131,6 +146,10 @@ function SessionEditor({ sessionId, initialForm, teaId, sessionDate, teas }: Ses
     deleteMutation.mutate();
   }
 
+  const formattedDate = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
+    parseSessionDate(sessionDate),
+  );
+
   return (
     <section className="panel panel--form stack">
       <div className="section-heading">
@@ -146,7 +165,7 @@ function SessionEditor({ sessionId, initialForm, teaId, sessionDate, teas }: Ses
         <Link to={`/teas/${teaId}`} className="pill pill--link">
           Tea #{teaId}
         </Link>
-        <span className="pill">{new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(sessionDate))}</span>
+        <span className="pill">{formattedDate}</span>
       </div>
 
       {saveMessage ? <p className="feedback feedback--success">{saveMessage}</p> : null}
@@ -154,6 +173,7 @@ function SessionEditor({ sessionId, initialForm, teaId, sessionDate, teas }: Ses
       <SessionForm
         form={form}
         teas={teas}
+        teaware={teaware}
         onChange={setForm}
         onSubmit={handleSubmit}
         submitLabel="Save changes"

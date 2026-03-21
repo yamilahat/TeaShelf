@@ -2,30 +2,29 @@ import type { TeaSession, TeaSessionInput } from "./api";
 
 export type TeaSessionFormState = {
   tea_id: string;
-  session_date: string;
+  teaware_id: string;
+  session_date: string; // YYYY-MM-DD for date input
   steeps_count: string;
   rating: string;
   notes: string;
 };
 
+function todayDDMMYYYY(): string {
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2, "0");
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const yyyy = now.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
 export const initialTeaSessionFormState: TeaSessionFormState = {
   tea_id: "",
-  session_date: "",
+  teaware_id: "",
+  session_date: todayDDMMYYYY(),
   steeps_count: "",
   rating: "",
   notes: "",
 };
-
-function toDateTimeLocalInput(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  const timezoneOffsetMs = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - timezoneOffsetMs).toISOString().slice(0, 16);
-}
 
 export function toTeaSessionFormState(session?: TeaSession): TeaSessionFormState {
   if (!session) {
@@ -34,19 +33,19 @@ export function toTeaSessionFormState(session?: TeaSession): TeaSessionFormState
 
   return {
     tea_id: session.tea_id.toString(),
-    session_date: toDateTimeLocalInput(session.session_date),
+    teaware_id: session.teaware_id?.toString() ?? "",
+    session_date: session.session_date, // already DD/MM/YYYY from API
     steeps_count: session.steeps_count?.toString() ?? "",
     rating: session.rating?.toString() ?? "",
     notes: session.notes ?? "",
   };
 }
 
-export function toTeaSessionPayload(
-  form: TeaSessionFormState,
-): TeaSessionInput {
+export function toTeaSessionPayload(form: TeaSessionFormState): TeaSessionInput {
   return {
     tea_id: Number(form.tea_id),
-    session_date: new Date(form.session_date).toISOString(),
+    teaware_id: form.teaware_id ? Number(form.teaware_id) : null,
+    session_date: form.session_date, // DD/MM/YYYY, backend accepts it
     steeps_count: form.steeps_count ? Number(form.steeps_count) : null,
     rating: form.rating ? Number(form.rating) : null,
     notes: form.notes.trim() || null,

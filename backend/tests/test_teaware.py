@@ -9,7 +9,7 @@ def teaware_payload(
     material: str | None = "yixing clay",
     vendor: str | None = "Crimson Lotus",
     preferred_tea_types: list[str] = ["oolong"],
-    acquired_date: str | None = "2023-04-15",
+    acquired_date: str | None = "15/04/2023",
     notes: str | None = "Good for oolongs",
 ) -> dict:
     return {
@@ -113,13 +113,22 @@ def test_create_teaware_response_includes_id(client: TestClient) -> None:
     assert response.json()["id"] == 1
 
 
-def test_create_teaware_acquired_date_returned_as_iso_date(client: TestClient) -> None:
+def test_create_teaware_acquired_date_returned_as_ddmmyyyy(client: TestClient) -> None:
+    payload = teaware_payload(acquired_date="15/04/2023")
+
+    response = client.post("/teaware", json=payload)
+
+    assert response.status_code == 201
+    assert response.json()["acquired_date"] == "15/04/2023"
+
+
+def test_create_teaware_acquired_date_accepts_iso_input(client: TestClient) -> None:
     payload = teaware_payload(acquired_date="2023-04-15")
 
     response = client.post("/teaware", json=payload)
 
     assert response.status_code == 201
-    assert response.json()["acquired_date"] == "2023-04-15"
+    assert response.json()["acquired_date"] == "15/04/2023"
 
 
 def test_create_teaware_returns_422_for_invalid_date_format(client: TestClient) -> None:

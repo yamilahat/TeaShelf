@@ -1,10 +1,12 @@
 import type { FormEvent, ReactNode } from "react";
 import type { Tea } from "../teas/api";
+import type { Teaware } from "../teaware/api";
 import type { TeaSessionFormState } from "./formState";
 
 type SessionFormProps = {
   form: TeaSessionFormState;
   teas: Tea[];
+  teaware: Teaware[];
   onChange: (nextForm: TeaSessionFormState) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   submitLabel: string;
@@ -16,6 +18,7 @@ type SessionFormProps = {
 export function SessionForm({
   form,
   teas,
+  teaware,
   onChange,
   onSubmit,
   submitLabel,
@@ -54,7 +57,9 @@ export function SessionForm({
           <span className="field__label">Session date</span>
           <input
             className="field__input"
-            type="datetime-local"
+            type="text"
+            placeholder="DD/MM/YYYY"
+            pattern="\d{2}/\d{2}/\d{4}"
             value={form.session_date}
             onChange={(event) => updateField("session_date", event.target.value)}
             required
@@ -63,6 +68,22 @@ export function SessionForm({
       </div>
 
       <div className="field-grid">
+        <label className="field">
+          <span className="field__label">Teaware</span>
+          <select
+            className="field__input"
+            value={form.teaware_id}
+            onChange={(event) => updateField("teaware_id", event.target.value)}
+          >
+            <option value="">None</option>
+            {teaware.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.nickname ?? item.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <label className="field">
           <span className="field__label">Steeps</span>
           <input
@@ -75,7 +96,9 @@ export function SessionForm({
             onChange={(event) => updateField("steeps_count", event.target.value)}
           />
         </label>
+      </div>
 
+      <div className="field-grid">
         <label className="field">
           <span className="field__label">Rating</span>
           <input

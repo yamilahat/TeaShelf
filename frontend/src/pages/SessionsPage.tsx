@@ -8,6 +8,7 @@ import {
   listSessions,
   type TeaSession,
 } from "../features/sessions/api";
+import { listTeaware } from "../features/teaware/api";
 import { SessionForm } from "../features/sessions/SessionForm";
 import {
   initialTeaSessionFormState,
@@ -15,11 +16,16 @@ import {
   toTeaSessionPayload,
 } from "../features/sessions/formState";
 
-function formatSessionDate(value: string) {
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
+/** Parse DD/MM/YYYY from API into a Date for display */
+function parseSessionDate(value: string): Date {
+  const [day, month, year] = value.split("/").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function formatSessionDate(value: string): string {
+  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
+    parseSessionDate(value),
+  );
 }
 
 export function SessionsPage() {
@@ -37,6 +43,11 @@ export function SessionsPage() {
     queryFn: listSessions,
   });
 
+  const teawareQuery = useQuery({
+    queryKey: ["teaware"],
+    queryFn: listTeaware,
+  });
+
   const createMutation = useMutation({
     mutationFn: createSession,
     onSuccess: async (createdSession) => {
@@ -50,6 +61,11 @@ export function SessionsPage() {
     const teas = teasQuery.data ?? [];
     return new Map(teas.map((tea) => [tea.id, tea.name]));
   }, [teasQuery.data]);
+
+  const teawareNameById = useMemo(() => {
+    const items = teawareQuery.data ?? [];
+    return new Map(items.map((t) => [t.id, t.nickname ?? t.name]));
+  }, [teawareQuery.data]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -78,6 +94,7 @@ export function SessionsPage() {
             onClick={() => {
               void teasQuery.refetch();
               void sessionsQuery.refetch();
+              void teawareQuery.refetch();
             }}
             disabled={teasQuery.isFetching || sessionsQuery.isFetching}
             className="button button--secondary"
@@ -111,6 +128,7 @@ export function SessionsPage() {
             <SessionForm
               form={form}
               teas={teasQuery.data ?? []}
+              teaware={teawareQuery.data ?? []}
               onChange={setForm}
               onSubmit={handleSubmit}
               submitLabel="Create session"
@@ -138,7 +156,7 @@ export function SessionsPage() {
 
       {!isLoading && !isError && sessionsQuery.data?.length === 0 ? (
         <div className="panel stack">
-          <p className="muted">No sessions yet. Log one to verify the new session endpoints.</p>
+          <p className="muted">No sessions yet. Log one above.</p>
         </div>
       ) : null}
 
@@ -149,6 +167,7 @@ export function SessionsPage() {
               key={session.id}
               session={session}
               teaName={teaNameById.get(session.tea_id) ?? `Tea #${session.tea_id}`}
+              teawareName={session.teaware_id ? teawareNameById.get(session.teaware_id) : undefined}
             />
           ))}
         </div>
@@ -160,9 +179,11 @@ export function SessionsPage() {
 function SessionCard({
   session,
   teaName,
+  teawareName,
 }: {
   session: TeaSession;
   teaName: string;
+  teawareName?: string;
 }) {
   return (
     <article className="tea-card">
@@ -180,10 +201,16 @@ function SessionCard({
             <dt>Tea</dt>
             <dd>
               <Link to={`/teas/${session.tea_id}`} className="inline-link">
-                #{session.tea_id}
+                {teaName}
               </Link>
             </dd>
           </div>
+          {teawareName ? (
+            <div>
+              <dt>Teaware</dt>
+              <dd>{teawareName}</dd>
+            </div>
+          ) : null}
           <div>
             <dt>Rating</dt>
             <dd>{session.rating ?? "Not set"}</dd>
