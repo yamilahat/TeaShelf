@@ -1,12 +1,29 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.db.session import get_db_session
+from app.models.tea_type import TeaTypeRef
 from app.models.teaware import Teaware, TeawarePreferredType
 from app.schemas.teaware import TeawareCreate, TeawareRead, TeawareUpdate
 
 router = APIRouter(prefix="/teaware", tags=["teaware"])
+
+
+def _resolve_tea_type_ids(
+    db: Session, names: list[str]
+) -> list[int]:
+    unique_names = list(dict.fromkeys(names))
+    rows = db.scalars(
+        select(TeaTypeRef).where(TeaTypeRef.name.in_(unique_names))
+    ).all()
+    found = {r.name: r.id for r in rows}
+    missing = [n for n in unique_names if n not in found]
+    if missing:
+        raise HTTPException(
+            status_code=422, detail=f"Unknown tea type(s): {missing!r}"
+        )
+    return [found[n] for n in unique_names]
 
 
 @router.post("", response_model=TeawareRead, status_code=status.HTTP_201_CREATED)
@@ -14,6 +31,7 @@ def create_teaware(
     payload: TeawareCreate,
     db: Session = Depends(get_db_session),
 ) -> Teaware:
+    tea_type_ids = _resolve_tea_type_ids(db, payload.preferred_tea_types)
     teaware = Teaware(
         name=payload.name,
         nickname=payload.nickname,
@@ -24,8 +42,7 @@ def create_teaware(
         acquired_date=payload.acquired_date,
         notes=payload.notes,
         preferred_tea_types=[
-            TeawarePreferredType(tea_type=t)
-            for t in dict.fromkeys(t.value for t in payload.preferred_tea_types)
+            TeawarePreferredType(tea_type_id=tid) for tid in tea_type_ids
         ],
     )
     db.add(teaware)
@@ -36,12 +53,30 @@ def create_teaware(
 
 @router.get("", response_model=list[TeawareRead])
 def list_teaware(db: Session = Depends(get_db_session)) -> list[Teaware]:
-    return list(db.scalars(select(Teaware).order_by(Teaware.id.asc())).all())
+    return list(
+        db.scalars(
+            select(Teaware)
+            .options(
+                selectinload(Teaware.preferred_tea_types).selectinload(
+                    TeawarePreferredType.tea_type_ref
+                )
+            )
+            .order_by(Teaware.id.asc())
+        ).all()
+    )
 
 
 @router.get("/{teaware_id}", response_model=TeawareRead)
 def get_teaware(teaware_id: int, db: Session = Depends(get_db_session)) -> Teaware:
-    teaware = db.get(Teaware, teaware_id)
+    teaware = db.scalars(
+        select(Teaware)
+        .options(
+            selectinload(Teaware.preferred_tea_types).selectinload(
+                TeawarePreferredType.tea_type_ref
+            )
+        )
+        .where(Teaware.id == teaware_id)
+    ).first()
     if not teaware:
         raise HTTPException(status_code=404, detail="Teaware not found")
     return teaware
@@ -53,7 +88,15 @@ def update_teaware(
     payload: TeawareUpdate,
     db: Session = Depends(get_db_session),
 ) -> Teaware:
-    teaware = db.get(Teaware, teaware_id)
+    teaware = db.scalars(
+        select(Teaware)
+        .options(
+            selectinload(Teaware.preferred_tea_types).selectinload(
+                TeawarePreferredType.tea_type_ref
+            )
+        )
+        .where(Teaware.id == teaware_id)
+    ).first()
     if not teaware:
         raise HTTPException(status_code=404, detail="Teaware not found")
 
@@ -64,11 +107,9 @@ def update_teaware(
         setattr(teaware, field, value)
 
     if preferred_tea_types is not None:
+        tea_type_ids = _resolve_tea_type_ids(db, preferred_tea_types)
         teaware.preferred_tea_types = [
-            TeawarePreferredType(tea_type=t)
-            for t in dict.fromkeys(
-                t.value if hasattr(t, "value") else t for t in preferred_tea_types
-            )
+            TeawarePreferredType(tea_type_id=tid) for tid in tea_type_ids
         ]
 
     db.commit()

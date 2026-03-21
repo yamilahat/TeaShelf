@@ -1,16 +1,24 @@
 import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, String, Text, Integer, Date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
+if TYPE_CHECKING:
+    from app.models.tea_type import TeaTypeRef
+
 
 class TeawarePreferredType(Base):
     __tablename__ = "teaware_preferred_types"
 
     teaware_id: Mapped[int] = mapped_column(ForeignKey("teaware.id"), primary_key=True)
-    tea_type: Mapped[str] = mapped_column(String(50), primary_key=True)
+    tea_type_id: Mapped[int] = mapped_column(
+        ForeignKey("tea_types.id"), primary_key=True
+    )
+
+    tea_type_ref: Mapped["TeaTypeRef"] = relationship()
 
 
 class Teaware(Base):

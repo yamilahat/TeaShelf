@@ -10,9 +10,7 @@ from sqlalchemy.pool import StaticPool
 from app.db.base import Base
 from app.db.session import get_db_session
 from app.main import create_app
-from app.models import tea as tea_model  # noqa: F401
-from app.models import tea_session as t  # noqa: F401
-from app.models import teaware as teaware_model  # noqa: F401
+from app.models.tea_type import TEA_TYPE_SEEDS, TeaTypeRef
 
 
 TEST_DATABASE_URL = "sqlite://"
@@ -33,6 +31,10 @@ def app() -> FastAPI:
 def db_session(app: FastAPI) -> Generator[Session, None, None]:
     Base.metadata.create_all(bind=engine)
     session = TestingSessionLocal()
+
+    for seed in TEA_TYPE_SEEDS:
+        session.add(TeaTypeRef(**seed))
+    session.commit()
 
     def override_get_db_session() -> Generator[Session, None, None]:
         yield session

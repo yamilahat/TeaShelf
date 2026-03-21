@@ -2,8 +2,6 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, field_serializer, field_validator
 
-from app.enums import TeaType
-
 
 class TeawareBase(BaseModel):
     name: str
@@ -12,7 +10,7 @@ class TeawareBase(BaseModel):
     volume_ml: int | None = None
     material: str | None = None
     vendor: str | None = None
-    preferred_tea_types: list[TeaType] = []
+    preferred_tea_types: list[str] = []
     acquired_date: date | None = None
     notes: str | None = None
 
@@ -45,8 +43,8 @@ class TeawareRead(TeawareBase):
     @field_validator("preferred_tea_types", mode="before")
     @classmethod
     def extract_tea_types(cls, value: object) -> object:
-        if value and hasattr(value[0], "tea_type"):
-            return [item.tea_type for item in value]
+        if value and hasattr(value[0], "tea_type_ref"):
+            return [item.tea_type_ref.name for item in value]
         return value
 
     @field_serializer("acquired_date")

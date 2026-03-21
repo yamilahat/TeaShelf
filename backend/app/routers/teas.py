@@ -1,12 +1,24 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, status, Query
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.db.session import get_db_session
 from app.models.tea import Tea
+from app.models.tea_type import TeaTypeRef
 from app.schemas.tea import TeaCreate, TeaRead, TeaUpdate
 
 router = APIRouter(prefix="/teas", tags=["teas"])
+
+
+def _resolve_tea_type_id(db: Session, name: str) -> int:
+    tea_type = db.scalars(
+        select(TeaTypeRef).where(TeaTypeRef.name == name)
+    ).first()
+    if not tea_type:
+        raise HTTPException(
+            status_code=422, detail=f"Unknown tea type: {name!r}"
+        )
+    return tea_type.id
 
 
 @router.post("", response_model=TeaRead, status_code=status.HTTP_201_CREATED)
@@ -14,11 +26,15 @@ def create_tea(
     payload: TeaCreate,
     db: Session = Depends(get_db_session),
 ) -> Tea:
+    tea_type_id = None
+    if payload.tea_type is not None:
+        tea_type_id = _resolve_tea_type_id(db, payload.tea_type)
+
     tea = Tea(
         name=payload.name,
         vendor=payload.vendor,
         origin=payload.origin,
-        tea_type=payload.tea_type,
+        tea_type_id=tea_type_id,
         harvest_year=payload.harvest_year,
         notes=payload.notes,
     )
@@ -35,9 +51,15 @@ def list_teas(
     vendor: str | None = Query(default=None),
     name: str | None = Query(default=None),
 ) -> list[Tea]:
-    stmt = select(Tea).order_by(Tea.id.asc())
+    stmt = (
+        select(Tea)
+        .options(selectinload(Tea.tea_type_ref))
+        .order_by(Tea.id.asc())
+    )
     if tea_type:
-        stmt = stmt.where(Tea.tea_type.ilike(f"%{tea_type}%"))
+        stmt = stmt.join(Tea.tea_type_ref).where(
+            TeaTypeRef.name.ilike(f"%{tea_type}%")
+        )
     if vendor:
         stmt = stmt.where(Tea.vendor.ilike(f"%{vendor}%"))
     if name:
@@ -47,7 +69,11 @@ def list_teas(
 
 @router.get("/{tea_id}", response_model=TeaRead)
 def get_tea(tea_id: int, db: Session = Depends(get_db_session)) -> Tea:
-    tea = db.get(Tea, tea_id)
+    tea = db.scalars(
+        select(Tea)
+        .options(selectinload(Tea.tea_type_ref))
+        .where(Tea.id == tea_id)
+    ).first()
     if not tea:
         raise HTTPException(status_code=404, detail="Tea not found")
     return tea
@@ -59,11 +85,22 @@ def update_tea(
     payload: TeaUpdate,
     db: Session = Depends(get_db_session),
 ) -> Tea:
-    tea = db.get(Tea, tea_id)
+    tea = db.scalars(
+        select(Tea)
+        .options(selectinload(Tea.tea_type_ref))
+        .where(Tea.id == tea_id)
+    ).first()
     if not tea:
         raise HTTPException(status_code=404, detail="Tea not found")
 
     update_data = payload.model_dump(exclude_unset=True)
+
+    tea_type_name = update_data.pop("tea_type", None)
+    if tea_type_name is not None:
+        tea.tea_type_id = _resolve_tea_type_id(db, tea_type_name)
+    elif "tea_type" in payload.model_fields_set:
+        tea.tea_type_id = None
+
     for field, value in update_data.items():
         setattr(tea, field, value)
 
