@@ -1,6 +1,6 @@
 import type { FormEvent, ReactNode } from "react";
 import { SearchableSelect } from "../../lib/SearchableSelect";
-import { TEA_TYPES } from "../../lib/teaTypes";
+import { useTeaTypeOptions } from "../tea-types/api";
 import type { TeaFormState } from "./formState";
 
 type TeaFormProps = {
@@ -22,6 +22,8 @@ export function TeaForm({
   errorMessage,
   secondaryAction,
 }: TeaFormProps) {
+  const teaTypeOptions = useTeaTypeOptions();
+
   function updateField<K extends keyof TeaFormState>(
     field: K,
     value: TeaFormState[K],
@@ -68,7 +70,7 @@ export function TeaForm({
         <div className="field">
           <span className="field__label">Tea type</span>
           <SearchableSelect
-            options={TEA_TYPES}
+            options={teaTypeOptions}
             value={form.tea_type}
             onChange={(value) => updateField("tea_type", value)}
             placeholder="Search tea type…"

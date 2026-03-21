@@ -1,5 +1,5 @@
 import type { FormEvent, ReactNode } from "react";
-import { TEA_TYPES } from "../../lib/teaTypes";
+import { useTeaTypeOptions } from "../tea-types/api";
 import type { TeawareFormState } from "./formState";
 
 type TeawareFormProps = {
@@ -21,6 +21,8 @@ export function TeawareForm({
   errorMessage,
   secondaryAction,
 }: TeawareFormProps) {
+  const teaTypeOptions = useTeaTypeOptions();
+
   function updateField<K extends keyof TeawareFormState>(
     field: K,
     value: TeawareFormState[K],
@@ -120,7 +122,7 @@ export function TeawareForm({
       <fieldset className="field">
         <legend className="field__label">Preferred tea types</legend>
         <div className="checkbox-group">
-          {TEA_TYPES.map((tt) => (
+          {teaTypeOptions.map((tt) => (
             <label key={tt.value} className="checkbox-label">
               <input
                 type="checkbox"

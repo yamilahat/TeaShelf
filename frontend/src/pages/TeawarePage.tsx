@@ -1,11 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
+import { teaTypeLabel } from "../features/tea-types/api";
 import { listTeaware } from "../features/teaware/api";
-import { TEA_TYPES } from "../lib/teaTypes";
-
-function teaTypeLabel(value: string) {
-  return TEA_TYPES.find((t) => t.value === value)?.label ?? value;
-}
 
 export function TeawarePage() {
   const { data, isPending, isError, error, refetch, isFetching } = useQuery({
