@@ -8,5 +8,5 @@ class TeaType(str, Enum):
     red = "red"
     yellow = "yellow"
     oolong = "oolong"
-    ripe_puerh = "ripe pu-erh"
-    raw_puerh = "raw pu-erh"
+    ripe_puerh = "shou pu-erh (ripe)"
+    raw_puerh = "sheng pu-erh (raw)"

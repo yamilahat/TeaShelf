@@ -405,6 +405,90 @@ select:disabled {
   align-items: flex-end;
 }
 
+.searchable-select {
+  position: relative;
+}
+
+.searchable-select__clear {
+  position: absolute;
+  right: 0.7rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #8a715f;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.2rem 0.3rem;
+}
+
+.searchable-select__clear:hover {
+  color: #2f241f;
+}
+
+.searchable-select__dropdown {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  border: 1px solid #d9cabc;
+  border-radius: 14px;
+  background: #fffdf9;
+  box-shadow: 0 8px 24px -8px rgba(68, 46, 28, 0.22);
+}
+
+.searchable-select__option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.75rem;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: #2f241f;
+  cursor: pointer;
+}
+
+.searchable-select__option:hover {
+  background: #f0e4d5;
+}
+
+.searchable-select__option--active {
+  background: #e8dac9;
+  font-weight: 600;
+}
+
+.searchable-select__empty {
+  padding: 0.55rem 0.75rem;
+  color: #8a715f;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #3e3029;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  accent-color: #7c5b45;
+}
+
 @media (max-width: 720px) {
   .site-header__inner,
   .page {

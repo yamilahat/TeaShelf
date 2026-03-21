@@ -1,10 +1,13 @@
 import type { ReactNode } from "react";
 import { Navigate, NavLink, Route, Routes } from "react-router";
 import { NewTeaPage } from "./pages/NewTeaPage";
+import { NewTeawarePage } from "./pages/NewTeawarePage";
 import { SessionDetailPage } from "./pages/SessionDetailPage";
 import { SessionsPage } from "./pages/SessionsPage";
 import { TeaDetailPage } from "./pages/TeaDetailPage";
 import { TeasPage } from "./pages/TeasPage";
+import { TeawareDetailPage } from "./pages/TeawareDetailPage";
+import { TeawarePage } from "./pages/TeawarePage";
 
 function ShellLayout({ children }: { children: ReactNode }) {
   return (
@@ -18,6 +21,7 @@ function ShellLayout({ children }: { children: ReactNode }) {
 
           <nav className="nav">
             <NavItem to="/teas">Teas</NavItem>
+            <NavItem to="/teaware">Teaware</NavItem>
             <NavItem to="/sessions">Sessions</NavItem>
           </nav>
         </div>
@@ -47,6 +51,9 @@ export default function App() {
         <Route path="/teas" element={<TeasPage />} />
         <Route path="/teas/new" element={<NewTeaPage />} />
         <Route path="/teas/:teaId" element={<TeaDetailPage />} />
+        <Route path="/teaware" element={<TeawarePage />} />
+        <Route path="/teaware/new" element={<NewTeawarePage />} />
+        <Route path="/teaware/:teawareId" element={<TeawareDetailPage />} />
         <Route path="/sessions" element={<SessionsPage />} />
         <Route path="/sessions/:sessionId" element={<SessionDetailPage />} />
       </Routes>

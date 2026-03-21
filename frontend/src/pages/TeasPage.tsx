@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { type TeaFilters, listTeas } from "../features/teas/api";
+import { SearchableSelect } from "../lib/SearchableSelect";
+import { TEA_TYPES } from "../lib/teaTypes";
 
 function useDebounced<T>(value: T, delay = 300): T {
   const [debounced, setDebounced] = useState(value);
@@ -76,12 +78,11 @@ export function TeasPage() {
         </div>
         <div className="field">
           <label className="field__label">Type</label>
-          <input
-            className="field__input"
-            type="text"
-            placeholder="e.g. Green, Oolong…"
+          <SearchableSelect
+            options={TEA_TYPES}
             value={filters.tea_type ?? ""}
-            onChange={(e) => handleFilter("tea_type", e.target.value)}
+            onChange={(value) => handleFilter("tea_type", value)}
+            placeholder="All types"
           />
         </div>
         {hasFilters && (

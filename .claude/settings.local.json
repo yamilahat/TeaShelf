@@ -9,7 +9,8 @@
       "Bash(echo \"EXIT:$?\")",
       "Bash(alembic downgrade:*)",
       "Bash(alembic stamp:*)",
-      "Bash(alembic upgrade:*)"
+      "Bash(alembic upgrade:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

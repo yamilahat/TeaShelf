@@ -1,4 +1,6 @@
 import type { FormEvent, ReactNode } from "react";
+import { SearchableSelect } from "../../lib/SearchableSelect";
+import { TEA_TYPES } from "../../lib/teaTypes";
 import type { TeaFormState } from "./formState";
 
 type TeaFormProps = {
@@ -63,15 +65,15 @@ export function TeaForm({
       </div>
 
       <div className="field-grid">
-        <label className="field">
+        <div className="field">
           <span className="field__label">Tea type</span>
-          <input
-            className="field__input"
-            placeholder="green, oolong, white..."
+          <SearchableSelect
+            options={TEA_TYPES}
             value={form.tea_type}
-            onChange={(event) => updateField("tea_type", event.target.value)}
+            onChange={(value) => updateField("tea_type", value)}
+            placeholder="Search tea type…"
           />
-        </label>
+        </div>
 
         <label className="field">
           <span className="field__label">Harvest year</span>
