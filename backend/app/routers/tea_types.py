@@ -12,3 +12,6 @@ router = APIRouter(prefix="/tea-types", tags=["tea-types"])
 @router.get("", response_model=list[TeaTypeRead])
 def list_tea_types(db: Session = Depends(get_db_session)) -> list[TeaTypeRef]:
     return list(db.scalars(select(TeaTypeRef).order_by(TeaTypeRef.id)).all())
+
+
+@router.post("")
