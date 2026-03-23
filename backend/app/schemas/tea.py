@@ -20,3 +20,5 @@ class TeaUpdate(TeaBase):
 
 class TeaRead(TeaBase):
     model_config = ConfigDict(from_attributes=True)
+
+    id: int
