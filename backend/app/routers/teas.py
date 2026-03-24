@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session, selectinload
 from app.db.session import get_db_session
 from app.models.tea import Tea
 from app.models.tea_type import TeaTypeRef
-from app.schemas.tea import TeaCreate, TeaRead, TeaUpdate
+from app.schemas.tea import TeaCreate, TeaRead, TeaUpdate, TeaQuantityUpdate
 
 router = APIRouter(prefix="/teas", tags=["teas"])
 
@@ -118,3 +118,21 @@ def delete_tea(tea_id: int, db: Session = Depends(get_db_session)) -> Response:
     db.delete(tea)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.patch("/{tea_id}/quantity", response_model=TeaRead)
+def update_quantity(tea_id: int, payload: TeaQuantityUpdate, db: Session = Depends(get_db_session)) -> Tea:
+    tea = db.scalars(
+        select(Tea)
+        .options(selectinload(Tea.tea_type_ref))
+        .where(Tea.id == tea_id)
+    ).first()
+    if not tea:
+        raise HTTPException(status_code=404, detail="Tea not found")
+    elif not payload.model_dump(exclude_unset=True):
+        raise HTTPException(status_code=422, detail="No fields provided")
+    
+    tea.current_quantity_g = payload.current_quantity_g
+    db.commit()
+    db.refresh(tea)
+    return tea
