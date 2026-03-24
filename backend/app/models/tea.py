@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Integer, String, Text
+from sqlalchemy import ForeignKey, Integer, String, Text, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -20,6 +20,8 @@ class Tea(Base):
     tea_type_id: Mapped[int | None] = mapped_column(
         ForeignKey("tea_types.id"), nullable=True
     )
+    initial_quantity_g: Mapped[float | None] = mapped_column(Float, nullable=True)
+    current_quantity_g: Mapped[float| None] = mapped_column(Float, nullable=True)
     harvest_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 

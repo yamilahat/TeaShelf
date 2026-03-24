@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router";
-import { deleteTea, getTea, updateTea } from "../features/teas/api";
+import { deleteTea, getTea, updateTea, updateTeaQuantity } from "../features/teas/api";
 import { listSessions } from "../features/sessions/api";
 import { TeaForm } from "../features/teas/TeaForm";
 import {
@@ -58,7 +58,7 @@ export function TeaDetailPage() {
     );
   }
 
-  return <TeaEditor key={teaQuery.data.id} teaId={teaId} initialForm={toTeaFormState(teaQuery.data)} name={teaQuery.data.name} teaType={teaQuery.data.tea_type} origin={teaQuery.data.origin} />;
+  return <TeaEditor key={teaQuery.data.id} teaId={teaId} initialForm={toTeaFormState(teaQuery.data)} name={teaQuery.data.name} teaType={teaQuery.data.tea_type} origin={teaQuery.data.origin} initialQuantityG={teaQuery.data.initial_quantity_g} currentQuantityG={teaQuery.data.current_quantity_g} />;
 }
 
 type TeaEditorProps = {
@@ -67,6 +67,8 @@ type TeaEditorProps = {
   name: string;
   teaType: string | null;
   origin: string | null;
+  initialQuantityG: number | null;
+  currentQuantityG: number | null;
 };
 
 function TeaEditor({
@@ -75,11 +77,14 @@ function TeaEditor({
   name,
   teaType,
   origin,
+  initialQuantityG,
+  currentQuantityG,
 }: TeaEditorProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<TeaFormState>(initialForm);
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [quantityInput, setQuantityInput] = useState(currentQuantityG?.toString() ?? "");
+  const [quantityMessage, setQuantityMessage] = useState<string | null>(null);
 
   const sessionsQuery = useQuery({
     queryKey: ["sessions"],
@@ -93,11 +98,10 @@ function TeaEditor({
 
   const updateMutation = useMutation({
     mutationFn: () => updateTea(teaId, toTeaPayload(form)),
-    onSuccess: async (updatedTea) => {
-      setSaveMessage("Tea updated.");
-      setForm(toTeaFormState(updatedTea));
+    onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["teas"] });
       await queryClient.invalidateQueries({ queryKey: ["teas", teaId] });
+      navigate("/teas", { replace: true });
     },
   });
 
@@ -110,14 +114,21 @@ function TeaEditor({
     },
   });
 
+  const quantityMutation = useMutation({
+    mutationFn: (qty: number) => updateTeaQuantity(teaId, qty),
+    onSuccess: async () => {
+      setQuantityMessage("Quantity updated.");
+      await queryClient.invalidateQueries({ queryKey: ["teas"] });
+      await queryClient.invalidateQueries({ queryKey: ["teas", teaId] });
+    },
+  });
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSaveMessage(null);
     updateMutation.mutate();
   }
 
   function handleDelete() {
-    setSaveMessage(null);
     deleteMutation.mutate();
   }
 
@@ -135,9 +146,45 @@ function TeaEditor({
         <span className="pill">Tea #{teaId}</span>
         {teaType ? <span className="pill">{teaType}</span> : null}
         {origin ? <span className="pill">{origin}</span> : null}
+        {initialQuantityG != null ? (
+          <span className="pill pill--stock">Initial: {initialQuantityG} g</span>
+        ) : null}
       </div>
 
-      {saveMessage ? <p className="feedback feedback--success">{saveMessage}</p> : null}
+      {(initialQuantityG != null || currentQuantityG != null) && (
+        <div className="quantity-inline">
+          <label className="quantity-inline__field">
+            <span className="field__label">Remaining (g)</span>
+            <input
+              className="field__input"
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="any"
+              value={quantityInput}
+              onChange={(e) => {
+                setQuantityInput(e.target.value);
+                setQuantityMessage(null);
+              }}
+            />
+          </label>
+          <button
+            type="button"
+            className="button button--secondary"
+            disabled={quantityMutation.isPending || quantityInput === ""}
+            onClick={() => {
+              setQuantityMessage(null);
+              quantityMutation.mutate(Number(quantityInput));
+            }}
+          >
+            {quantityMutation.isPending ? "Saving..." : "Update"}
+          </button>
+          {quantityMessage ? <span className="feedback feedback--success">{quantityMessage}</span> : null}
+          {quantityMutation.isError ? (
+            <span className="feedback feedback--error">{(quantityMutation.error as Error).message}</span>
+          ) : null}
+        </div>
+      )}
 
       <div className="panel panel--nested stack">
         <div className="section-heading">
@@ -177,6 +224,7 @@ function TeaEditor({
         onSubmit={handleSubmit}
         submitLabel="Save changes"
         isSubmitting={updateMutation.isPending}
+        isEditing
         errorMessage={updateMutation.isError ? (updateMutation.error as Error).message : null}
         secondaryAction={
           <>
