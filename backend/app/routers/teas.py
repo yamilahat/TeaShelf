@@ -50,6 +50,7 @@ def list_teas(
     tea_type: str | None = Query(default=None),
     vendor: str | None = Query(default=None),
     name: str | None = Query(default=None),
+    in_stock: bool | None = Query(default=None),
 ) -> list[Tea]:
     stmt = (
         select(Tea)
@@ -64,6 +65,14 @@ def list_teas(
         stmt = stmt.where(Tea.vendor.ilike(f"%{vendor}%"))
     if name:
         stmt = stmt.where(Tea.name.ilike(f"%{name}%"))
+    if in_stock is True:
+        stmt = stmt.where(
+            (Tea.current_quantity_g == None) | (Tea.current_quantity_g > 0)  # noqa: E711
+        )
+    elif in_stock is False:
+        stmt = stmt.where(
+            (Tea.current_quantity_g != None) & (Tea.current_quantity_g <= 0)  # noqa: E711
+        )
     return list(db.scalars(stmt).all())
 
 
