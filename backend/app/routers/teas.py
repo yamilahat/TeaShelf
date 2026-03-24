@@ -35,6 +35,8 @@ def create_tea(
         vendor=payload.vendor,
         origin=payload.origin,
         tea_type_id=tea_type_id,
+        initial_quantity_g=payload.initial_quantity_g,
+        current_quantity_g=payload.current_quantity_g,
         harvest_year=payload.harvest_year,
         notes=payload.notes,
     )
