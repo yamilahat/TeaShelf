@@ -24,7 +24,7 @@ export function TeasPage() {
     queryFn: () => listTeas(debouncedFilters),
   });
 
-  const hasFilters = !!(filters.name || filters.vendor || filters.tea_type);
+  const hasFilters = !!(filters.name || filters.vendor || filters.tea_type || filters.in_stock);
 
   function handleFilter(field: keyof TeaFilters, value: string) {
     setFilters((prev) => ({ ...prev, [field]: value || undefined }));
@@ -86,13 +86,26 @@ export function TeasPage() {
             placeholder="All types"
           />
         </div>
-        {hasFilters && (
-          <div className="filter-bar__actions">
+        <div className="filter-bar__actions">
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={filters.in_stock === true}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  in_stock: e.target.checked ? true : undefined,
+                }))
+              }
+            />
+            In stock only
+          </label>
+          {hasFilters && (
             <button type="button" className="button button--secondary" onClick={clearFilters}>
               Clear filters
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {isPending ? <p className="panel muted">Loading teas...</p> : null}
@@ -124,7 +137,14 @@ export function TeasPage() {
                     <h3>{tea.name}</h3>
                     <p className="muted">{tea.vendor ?? "Unknown vendor"}</p>
                   </div>
-                  <span className="pill">#{tea.id}</span>
+                  <div className="metadata-row">
+                    {tea.current_quantity_g != null && tea.current_quantity_g > 0 ? (
+                      <span className="pill pill--stock">{tea.current_quantity_g} g</span>
+                    ) : tea.current_quantity_g != null && tea.current_quantity_g <= 0 ? (
+                      <span className="pill pill--out-of-stock">Out of stock</span>
+                    ) : null}
+                    <span className="pill">#{tea.id}</span>
+                  </div>
                 </div>
 
                 <dl className="tea-card__meta">

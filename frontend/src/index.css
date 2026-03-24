@@ -363,6 +363,16 @@ select:disabled {
   text-underline-offset: 0.14em;
 }
 
+.pill--stock {
+  background: #e8eed9;
+  color: #46623c;
+}
+
+.pill--out-of-stock {
+  background: #f5e6e3;
+  color: #8c4438;
+}
+
 .pill--link {
   border: 1px solid #d8c8b7;
 }
@@ -470,6 +480,17 @@ select:disabled {
   color: #8a715f;
 }
 
+.quantity-update {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.quantity-update .field {
+  flex: 1;
+  max-width: 200px;
+}
+
 .checkbox-group {
   display: flex;
   flex-wrap: wrap;
@@ -511,6 +532,15 @@ select:disabled {
   .linked-list__item {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .quantity-update {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .quantity-update .field {
+    max-width: none;
   }
 
   .button-row > * {

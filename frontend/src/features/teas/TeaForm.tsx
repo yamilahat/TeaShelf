@@ -92,6 +92,36 @@ export function TeaForm({
         </label>
       </div>
 
+      <div className="field-grid">
+        <label className="field">
+          <span className="field__label">Initial quantity (g)</span>
+          <input
+            className="field__input"
+            placeholder="e.g. 100"
+            type="number"
+            inputMode="decimal"
+            min="0"
+            step="any"
+            value={form.initial_quantity_g}
+            onChange={(event) => updateField("initial_quantity_g", event.target.value)}
+          />
+        </label>
+
+        <label className="field">
+          <span className="field__label">Current quantity (g)</span>
+          <input
+            className="field__input"
+            placeholder="e.g. 45"
+            type="number"
+            inputMode="decimal"
+            min="0"
+            step="any"
+            value={form.current_quantity_g}
+            onChange={(event) => updateField("current_quantity_g", event.target.value)}
+          />
+        </label>
+      </div>
+
       <label className="field">
         <span className="field__label">Notes</span>
         <textarea

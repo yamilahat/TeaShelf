@@ -6,6 +6,8 @@ export type Tea = {
   vendor: string | null;
   origin: string | null;
   tea_type: string | null;
+  initial_quantity_g: number | null;
+  current_quantity_g: number | null;
   harvest_year: number | null;
   notes: string | null;
 };
@@ -15,6 +17,8 @@ export type TeaInput = {
   vendor?: string | null;
   origin?: string | null;
   tea_type?: string | null;
+  initial_quantity_g?: number | null;
+  current_quantity_g?: number | null;
   harvest_year?: number | null;
   notes?: string | null;
 };
@@ -23,6 +27,7 @@ export type TeaFilters = {
   tea_type?: string;
   vendor?: string;
   name?: string;
+  in_stock?: boolean;
 };
 
 export function listTeas(filters?: TeaFilters) {
@@ -30,6 +35,7 @@ export function listTeas(filters?: TeaFilters) {
   if (filters?.tea_type) params.set("tea_type", filters.tea_type);
   if (filters?.vendor) params.set("vendor", filters.vendor);
   if (filters?.name) params.set("name", filters.name);
+  if (filters?.in_stock != null) params.set("in_stock", String(filters.in_stock));
   const qs = params.toString();
   return apiFetch<Tea[]>(qs ? `/teas?${qs}` : "/teas");
 }
@@ -55,5 +61,12 @@ export function updateTea(teaId: number, input: TeaInput) {
 export function deleteTea(teaId: number) {
   return apiFetch<void>(`/teas/${teaId}`, {
     method: "DELETE",
+  });
+}
+
+export function updateTeaQuantity(teaId: number, currentQuantityG: number) {
+  return apiFetch<Tea>(`/teas/${teaId}/quantity`, {
+    method: "PATCH",
+    body: JSON.stringify({ current_quantity_g: currentQuantityG }),
   });
 }
