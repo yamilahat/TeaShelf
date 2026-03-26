@@ -71,11 +71,12 @@ def update_session(
     for field, value in update_data.items():
         setattr(tea_session, field, value)
 
-    tea_session.steep_infusions.clear()
+    for old_inf in list(tea_session.steep_infusions):
+        db.delete(old_inf)
     db.flush()
-    tea_session.steep_infusions = [
-        SteepInfusion(**inf.model_dump()) for inf in payload.steep_infusions
-    ]
+
+    for inf in payload.steep_infusions:
+        tea_session.steep_infusions.append(SteepInfusion(**inf.model_dump()))
 
     db.commit()
     db.refresh(tea_session)
