@@ -1,8 +1,9 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.db.session import get_db_session
+from app.models.steep_infusion import SteepInfusion
 from app.models.tea import Tea
 from app.models.tea_session import TeaSession
 from app.schemas.tea_session import SessionCreate, SessionRead, SessionUpdate
@@ -19,15 +20,12 @@ def create_session(
     if not tea:
         raise HTTPException(status_code=404, detail="Tea not found")
 
-    tea_session = TeaSession(
-        tea_id=payload.tea_id,
-        teaware_id=payload.teaware_id,
-        session_date=payload.session_date,
-        steeps_count=payload.steeps_count,
-        rating=payload.rating,
-        notes=payload.notes,
-    )
+    session_data = payload.model_dump(exclude={"steep_infusions"})
+    tea_session = TeaSession(**session_data)
     db.add(tea_session)
+    db.flush()
+    for inf in payload.steep_infusions:
+        db.add(SteepInfusion(session_id=tea_session.id, **inf.model_dump()))
     db.commit()
     db.refresh(tea_session)
     return tea_session
@@ -35,14 +33,19 @@ def create_session(
 
 @router.get("", response_model=list[SessionRead])
 def list_sessions(db: Session = Depends(get_db_session)) -> list[TeaSession]:
-    stmt = select(TeaSession).order_by(TeaSession.id.asc())
-    teas = list(db.scalars(stmt).all())
-    return teas
+    stmt = (
+        select(TeaSession)
+        .options(selectinload(TeaSession.steep_infusions))
+        .order_by(TeaSession.id.asc())
+    )
+    return list(db.scalars(stmt).all())
 
 
 @router.get("/{session_id}", response_model=SessionRead)
 def get_session(session_id: int, db: Session = Depends(get_db_session)) -> TeaSession:
-    tea_session = db.get(TeaSession, session_id)
+    tea_session = db.get(
+        TeaSession, session_id, options=[selectinload(TeaSession.steep_infusions)]
+    )
     if not tea_session:
         raise HTTPException(status_code=404, detail="Tea session not found")
     return tea_session
@@ -54,7 +57,9 @@ def update_session(
     payload: SessionUpdate,
     db: Session = Depends(get_db_session),
 ) -> TeaSession:
-    tea_session = db.get(TeaSession, session_id)
+    tea_session = db.get(
+        TeaSession, session_id, options=[selectinload(TeaSession.steep_infusions)]
+    )
     if not tea_session:
         raise HTTPException(status_code=404, detail="Tea session not found")
 
@@ -62,9 +67,13 @@ def update_session(
     if not tea:
         raise HTTPException(status_code=404, detail="Tea not found")
 
-    update_data = payload.model_dump(exclude_unset=True)
+    update_data = payload.model_dump(exclude_unset=True, exclude={"steep_infusions"})
     for field, value in update_data.items():
         setattr(tea_session, field, value)
+
+    tea_session.steep_infusions = [
+        SteepInfusion(**inf.model_dump()) for inf in payload.steep_infusions
+    ]
 
     db.commit()
     db.refresh(tea_session)
