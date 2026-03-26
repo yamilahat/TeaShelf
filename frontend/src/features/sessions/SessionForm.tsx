@@ -2,6 +2,7 @@ import type { FormEvent, ReactNode } from "react";
 import type { Tea } from "../teas/api";
 import type { Teaware } from "../teaware/api";
 import type { TeaSessionFormState } from "./formState";
+import { SteepInfusionList } from "./SteepInfusionList";
 
 type SessionFormProps = {
   form: TeaSessionFormState;
@@ -111,6 +112,70 @@ export function SessionForm({
           />
         </label>
       </div>
+
+      <div className="field-grid">
+        <label className="field">
+          <span className="field__label">Water temp (&deg;C)</span>
+          <input
+            className="field__input"
+            type="number"
+            min="0"
+            max="100"
+            step="any"
+            inputMode="decimal"
+            placeholder="95"
+            value={form.water_temp_c}
+            onChange={(event) => updateField("water_temp_c", event.target.value)}
+          />
+        </label>
+
+        <label className="field">
+          <span className="field__label">Leaf weight (g)</span>
+          <input
+            className="field__input"
+            type="number"
+            min="0"
+            step="any"
+            inputMode="decimal"
+            placeholder="5"
+            value={form.leaf_weight_g}
+            onChange={(event) => updateField("leaf_weight_g", event.target.value)}
+          />
+        </label>
+      </div>
+
+      <div className="field-grid">
+        <label className="field">
+          <span className="field__label">Water volume (ml)</span>
+          <input
+            className="field__input"
+            type="number"
+            min="0"
+            step="any"
+            inputMode="decimal"
+            placeholder="150"
+            value={form.water_volume_ml}
+            onChange={(event) => updateField("water_volume_ml", event.target.value)}
+          />
+        </label>
+
+        <label className="field">
+          <span className="field__label">Brew method</span>
+          <input
+            className="field__input"
+            type="text"
+            maxLength={60}
+            placeholder="Gongfu, Western, etc."
+            value={form.brew_method}
+            onChange={(event) => updateField("brew_method", event.target.value)}
+          />
+        </label>
+      </div>
+
+      <SteepInfusionList
+        infusions={form.steep_infusions}
+        onChange={(infusions) => onChange({ ...form, steep_infusions: infusions })}
+      />
 
       <label className="field">
         <span className="field__label">Notes</span>
