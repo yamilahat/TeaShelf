@@ -1,7 +1,7 @@
 import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, ForeignKey, Integer, Text
+from sqlalchemy import Date, ForeignKey, Integer, Text, Float, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -28,6 +28,13 @@ class TeaSession(Base):
 
     session_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     steeps_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    
+    # Advanced scalar brew params
+    water_temp_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    leaf_weight_g: Mapped[float | None] = mapped_column(Float, nullable=True)
+    water_volume_ml: Mapped[float | None] = mapped_column(Float, nullable=True)
+    brew_method: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    
     rating: Mapped[int | None] = mapped_column(Integer, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
