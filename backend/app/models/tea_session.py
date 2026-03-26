@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 if TYPE_CHECKING:
+    from app.models.steep_infusion import SteepInfusion
     from app.models.tea import Tea
     from app.models.teaware import Teaware
 
@@ -40,3 +41,7 @@ class TeaSession(Base):
 
     tea: Mapped["Tea"] = relationship(back_populates="tea_sessions")
     teaware: Mapped["Teaware | None"] = relationship()
+    steep_infusions: Mapped[list["SteepInfusion"]] = relationship(
+        back_populates="session",
+        cascade="all, delete-orphan",
+    )
