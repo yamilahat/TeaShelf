@@ -20,6 +20,11 @@ def session_payload(
     rating: int | None = 8,
     notes: str | None = "Sweet and grassy",
     teaware_id: int | None = None,
+    water_temp_c: float | None = None,
+    leaf_weight_g: float | None = None,
+    water_volume_ml: float | None = None,
+    brew_method: str | None = None,
+    steep_infusions: list | None = None,
 ) -> dict:
     return {
         "tea_id": tea_id,
@@ -28,6 +33,11 @@ def session_payload(
         "rating": rating,
         "notes": notes,
         "teaware_id": teaware_id,
+        "water_temp_c": water_temp_c,
+        "leaf_weight_g": leaf_weight_g,
+        "water_volume_ml": water_volume_ml,
+        "brew_method": brew_method,
+        "steep_infusions": steep_infusions or [],
     }
 
 
@@ -40,6 +50,11 @@ def serialized_session_payload(payload: dict, session_id: int | None = None) -> 
     except ValueError:
         d = date(int(raw[6:]), int(raw[3:5]), int(raw[:2]))
     serialized["session_date"] = d.strftime("%d/%m/%Y")
+    serialized.setdefault("water_temp_c", None)
+    serialized.setdefault("leaf_weight_g", None)
+    serialized.setdefault("water_volume_ml", None)
+    serialized.setdefault("brew_method", None)
+    serialized.setdefault("steep_infusions", [])
     if session_id is not None:
         serialized["id"] = session_id
     return serialized
