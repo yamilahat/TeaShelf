@@ -217,8 +217,36 @@ function SessionCard({
           </div>
           <div>
             <dt>Steeps</dt>
-            <dd>{session.steeps_count ?? "Not set"}</dd>
+            <dd>
+              {session.steep_infusions.length > 0
+                ? session.steep_infusions.length
+                : session.steeps_count ?? "Not set"}
+            </dd>
           </div>
+          {session.water_temp_c != null ? (
+            <div>
+              <dt>Water temp</dt>
+              <dd>{session.water_temp_c}&deg;C</dd>
+            </div>
+          ) : null}
+          {session.leaf_weight_g != null ? (
+            <div>
+              <dt>Leaf weight</dt>
+              <dd>{session.leaf_weight_g}g</dd>
+            </div>
+          ) : null}
+          {session.water_volume_ml != null ? (
+            <div>
+              <dt>Water vol</dt>
+              <dd>{session.water_volume_ml}ml</dd>
+            </div>
+          ) : null}
+          {session.brew_method ? (
+            <div>
+              <dt>Brew method</dt>
+              <dd>{session.brew_method}</dd>
+            </div>
+          ) : null}
         </dl>
 
         {session.notes ? <p className="tea-card__notes">{session.notes}</p> : null}
